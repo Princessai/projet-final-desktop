@@ -6,9 +6,29 @@ if (require('electron-squirrel-startup')) {
   app.quit();
 }
 
+let mainWindow;
+
+let splashScreen;
+
+function createSplash() {
+  splashScreen = new BrowserWindow({
+    width: 500,
+    height: 300,
+    transparent: true,
+    frame: false,
+    alwaysOnTop: true
+  });
+
+  splashScreen.loadFile("./src/splashScreen.html");
+  splashScreen.center();
+
+}
+
+
+
 const createWindow = () => {
   // Create the browser window.
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 800,
     height: 600,
     webPreferences: {
@@ -20,7 +40,20 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
+
+
+  mainWindow.once('ready-to-show', () => {
+    splashScreen.close();
+    mainWindow.show()
+  
+    if (process.env.NODE_ENV === "development") {
+      mainWindow.webContents.openDevTools();
+  
+    }
+  });
+  
+  
 };
 
 // This method will be called when Electron has finished
@@ -28,6 +61,7 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
+  createSplash();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
