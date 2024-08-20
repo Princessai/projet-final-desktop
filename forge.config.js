@@ -46,6 +46,9 @@ module.exports = {
             },
           ],
         },
+        // devServer: {
+        //   stats: 'verbose'
+        // }
       },
     },
     // Fuses are used to enable/disable various Electron functionality

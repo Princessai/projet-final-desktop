@@ -9,7 +9,7 @@ rules.push({
   test: /\.(png|jpg|gif|svg)$/,  // File extensions for images
   type: 'asset/resource',        // Built-in Webpack feature to handle assets
   generator: {
-    filename: 'assets/', // Output to 'images' directory
+    filename: './src/assets/[name].[ext]', // Output to 'images' directory
   },
 });
 

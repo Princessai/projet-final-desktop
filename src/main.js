@@ -40,20 +40,20 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools();
 
 
-  mainWindow.once('ready-to-show', () => {
-    splashScreen.close();
-    mainWindow.show()
-  
-    if (process.env.NODE_ENV === "development") {
-      mainWindow.webContents.openDevTools();
-  
-    }
-  });
-  
-  
+  // mainWindow.once('ready-to-show', () => {
+  //   splashScreen.close();
+  //   mainWindow.show()
+
+  //   if (process.env.NODE_ENV === "development") {
+  //     mainWindow.webContents.openDevTools();
+
+  //   }
+  // });
+
+
 };
 
 // This method will be called when Electron has finished
@@ -61,7 +61,7 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   createWindow();
-  createSplash();
+  // createSplash();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.

@@ -2,7 +2,6 @@ import React from 'react';
 import '/src/pages/Login/Login.css';
 import logo from '/src/assets/logo_app@2x.png';
 import { Link } from 'react-router-dom';
-
 function Login() {
     return (
         <div className="form-container d-flex justify-content-center align-items-center">

@@ -1,3 +1,23 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  height: 100vh;
+}
+
+#root {
+  height: 100%;
+}
+
+.div-container {
+  height: 100%;
+}
+
+.body-content-container {
+  height: 100%;
+}
+
+.content-container {
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  width: 100%;
 }

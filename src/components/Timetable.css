@@ -1,0 +1,42 @@
+  .myTimetable {
+      width: 100%;
+            /* table-layout: fixed; */
+  }
+
+  .myTimetable thead {
+      /* color: #FFFFFF; */
+  }
+
+  .myTimetable tbody {
+      /* background-color: #AAAAFF; */
+  }
+
+  .myTimetable td {
+      border: 1px solid black;
+      padding: 3px;
+      text-align: center;
+  }
+
+  /* .myTimetable tbody tr td:first-child {
+      background-color: #FF0066;
+      font-weight: bold;
+  } */
+
+  .break,
+  .lunch {
+      background-color: #FF0066 !important;
+      font-style: italic;
+      padding: 0 !important;
+      font-weight: bold;
+  }
+
+  .subject {
+      font-size: 12pt;
+      margin-bottom: 4px;
+  }
+
+  .room {
+      font-size: 10pt;
+      font-style: italic;
+  }
+  

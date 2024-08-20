@@ -1,10 +1,13 @@
-import React from 'react'
+import React from 'react';
+import './Footer.css';
 
 function Footer() {
     return (
-        <div>
-            Footer
-        </div>
+        <footer>
+            <p className=' text-white m-0 text-center'>
+                TrackIn IFran Copyright &copy; 2024 , All rights reserved
+            </p>
+        </footer>
     )
 }
 
