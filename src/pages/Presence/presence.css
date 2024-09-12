@@ -1,0 +1,21 @@
+.bloc-presence{
+  border: 1px solid #707070;
+  padding: 15px;
+  width: 50%;
+  border-radius: 5px;
+
+}
+
+.bloc-inactif{
+
+  padding: 15px;
+  width: 50%;
+  border-radius: 5px;
+  background-color: #eeeeee;
+}
+
+
+a{
+    text-decoration: none;
+    color: black;
+}
