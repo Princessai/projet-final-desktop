@@ -79,9 +79,9 @@ function TimetableCoordinator() {
 
                 {classe.map((classe, index) => {
                   return <div key={index} className="card shadow w-25 m-3" >
-                    <Link to={`/coordinator/timetable/class/${classe.id}`}>
+                    <Link to={`/coordinator/timetable/class/${classe.id}/${classe.label}`}>
                       <div className="card-body">
-                        <p className="card-text"><strong>{classe.label }</strong> </p>
+                        <p className="card-text"><strong>{classe.label}</strong> </p>
                       </div>
                     </Link>
                   </div>

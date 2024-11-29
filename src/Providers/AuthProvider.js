@@ -86,8 +86,10 @@ export function AuthContextProvider({ children }) {
 
                 const roleLabel = userInfo.role.label;
 
-                const redirectedPath = RoleBasedRedirection[roleLabel];
-                navigate(redirectedPath);
+
+                // const redirectedPath = RoleBasedRedirection[roleLabel];
+
+                // navigate(redirectedPath);
                 return response;
 
             });

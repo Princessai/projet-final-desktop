@@ -1,247 +1,197 @@
-import React from 'react'
+import React, { useState } from 'react'
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import Timetable from '../../components/Timetable'
 import Navbar from '../../components/Navbar';
 import SidebarCoordinator from '../../components/SidebarCoordinator';
 import Footer from '../../components/Footer';
 import '/src/pages/Presence/presence.css';
-import { Link } from 'react-router-dom';
+import classes from './AddTimetable.module.css';
+import { Link, useParams } from 'react-router-dom';
+import TextField from '@mui/material/TextField';
+import { createTheme, ThemeProvider } from '@mui/material/styles';
+import dayjs from 'dayjs';
+import isoWeek from 'dayjs/plugin/isoWeek';
+
+
+const theme = createTheme({
+    components: {
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        fontSize: '12px', // Font size for the input
+                        height: '30px', // Input height
+                    },
+                    '& .MuiInputLabel-root': {
+                        fontSize: '12px', // Label font size
+                    },
+                },
+            },
+        },
+        MuiPickersDay: {
+            styleOverrides: {
+                root: {
+                    fontSize: '12px', // Font size for day buttons
+                },
+            },
+        },
+    },
+});
+
+dayjs.extend(isoWeek);
+
+function isValidDate(value) {
+    if (isNaN(value.$D) || isNaN(value.$M) || isNaN(value.$y)) {
+        return false;
+    }
+
+    return true;
+}
+
+function enableOnly(date) {
+
+    return date.day() !== 1
+
+}
+
+function derivedMinDate(timetableStart, weekStart) {
+    const date = timetableStart ? timetableStart : weekStart;
+    return dayjs(date).day(5)
+}
+function derivedMaxDate(timetableStart, weekStart) {
+    const date = timetableStart ? timetableStart : weekStart;
+
+    return dayjs(date).day(7);
+}
+
+function onTdFocus() {
+    
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 function AddTimetable() {
+
+    const { classe_label } = useParams();
+    const weekStart = dayjs().startOf('isoWeek').startOf('day');
+
+
+    const [timetableStart, setTimetableStart] = useState(null);
+    const [timetableEnd, setTimetableEnd] = useState(null);
+
+
+
+    function selectTimetableStart(value, context) {
+        if (isValidDate(value) && context.validationError === null) {
+            const date = dayjs(value.$d);
+            setTimetableStart(date.format('YYYY-MM-DD HH:mm:ss'));
+            setTimetableEnd(dayjs(date).day(5).format('YYYY-MM-DD HH:mm:ss'))
+
+            console.log('TimetableStart', value, 'date', date);
+        }
+        console.log(context)
+
+    }
+
+    function selectTimetableEnd(value, context) {
+        if (isValidDate(value) && context.validationError === null) {
+            const date = dayjs(value.$d).format('YYYY-MM-DD HH:mm:ss');
+            setTimetableEnd(date);
+
+            console.log('TimetableStart', value, 'date', date);
+        }
+        console.log(context)
+
+    }
+
+
+
+
     return (
         <div className='div-container d-flex flex-column'>
             <Navbar />
             <div className='body-content-container d-flex'>
                 <SidebarCoordinator />
-                <section className='content-container'>
-                    <div class="row">
-                        <div class="col-md-12 mb-4 mt-3 ms-5">
-                            <h1 class='py-3'>Timetable B3 Dev</h1>
+                <section className={`content-container ${classes['container-addtimetable']} position-relative d-flex`}>
+                    <div className={`${classes.row}`}>
+                        <div className="col-md-12 mb-4 mt-3 ps-5">
+                            <h1 className='py-3'>New timetable for {classe_label}</h1>
                         </div>
-                        <div class="col-md-12 mb-5 d-flex">
-                            <div class="col-md-6 d-flex justify-content-evenly">
-                                <Link to={'/coordinator/timetable/class'}>
-                                    <button type="button" class="btn btn-danger">Current Timetable</button>
-                                </Link>
-                                <Link to={'/coordinator/timetable/class/pastimetable'}>
-                                    <button type="button" class="btn btn-danger">past Timetable</button>
-                                </Link >
-                                <Link to={'/coordinator/timetable/class/Upcomingimetable'}>
-                                    <button type="button" class="btn btn-danger">Upcoming Timetable</button>
-                                </Link>
-                            </div>
-                            <div class="col-md-6 d-flex justify-content-center">
-                                <Link to={'/coordinator/add-timetable'}>
-                                    <button type="button" class="btn btn-success">Add Timetable</button>
-                                </Link>
-
-                            </div>
+                        <div className="col-md-12 mb-5 d-flex">
 
                         </div>
-                        <div class="col-md-12">
+                        <div className="col-md-12">
 
-                            <Timetable />
+                            <div className='mx-5'>
+                                <div className='d-flex justify-content-center align-items-center text-center fs-5 fw-bold mb-5'>
+                                    <span>Timetable from</span>
 
-                            {/* <div className='mx-5'>
-                                <h5 className='text-center fw-bold text-decoration-underline mb-3'>Emploi du temps B3 Développement Web du 13 mai 17 mai 24</h5>
-                                <div className='d-flex'>
-                                    <table className=''>
-                                        <thead>
-                                            <tr className='d-flex flex-column justify-content-between'>
-                                                <th>Hours</th>
-                                                <th>08:00</th>
-                                                <th>09:00</th>
-                                                <th>10:00</th>
-                                                <th>11:00</th>
-                                                <th>12:00</th>
-                                                <th>13:00</th>
-                                                <th>14:00</th>
-                                                <th>15:00</th>
-                                                <th>16:00</th>
-                                                <th>17:00</th>
-                                                <th>18:00</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
+                                    <ThemeProvider theme={theme}>
+                                        <div className='dataPickerContainer mx-3'>
+                                            <DatePicker
+                                                key='from'
+                                                onError={(error) => {
+                                                    console.log('errorrr', error);
+                                                }}
+                                                shouldDisableDate={enableOnly}
+                                                onChange={selectTimetableStart}
+                                                minDate={weekStart}
+                                            />
+                                        </div>
 
-                                    <table className="myTimetable">
-                                        <thead className='text-center'>
-                                            <tr>
-                                                <th>
-                                                    Monday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Tuesday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Wednesday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Thursday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Friday
-                                                    <span>13/05</span>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody >
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6" className="break">Break</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6" className="lunch">Lunch</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colspan="6" className="break">Break</td>
-                                            </tr>
+                                    </ThemeProvider>
 
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                    <span>to</span>
+                                    <ThemeProvider theme={theme}>
+                                        <div className='dataPickerContainer mx-3'>
+                                            <DatePicker
+                                                key='to'
+                                                onError={(error) => {
+                                                    console.log('errorrr', error);
+                                                }}
+                                                minDate={derivedMinDate(timetableStart, weekStart)}
+                                                maxDate={derivedMaxDate(timetableStart, weekStart)}
+                                                onChange={selectTimetableEnd}
+                                                value={timetableEnd===null?null:dayjs(timetableEnd)}
+
+                                            />
+                                        </div>
+
+                                    </ThemeProvider>
                                 </div>
-
+                                <Timetable
+                                    TimetableData={{ seances: [], pauses: [] }}
+                                    timetableStart={timetableStart}
+                                    timetableEnd={timetableEnd}
+                                    onTdClick={onTdFocus}
+                                />
 
                                 <div>
-                                    <p className='text-center text-danger fw-bold text-decoration-underline'>NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
+                                    <p className='text-center text-danger fw-bold text-decoration-underline'>
+                                        NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
                                 </div>
-                            </div> */}
+                            </div>
 
 
 
                         </div>
                     </div>
+                    <div className={`${classes.addSidebar} h-100 bg-danger`}>
+
+                    </div>
+
 
                 </section>
             </div>
@@ -250,6 +200,7 @@ function AddTimetable() {
         </div>
 
     )
+    console.log("🚀 ~ AddTimetable ~ weekStart:", weekStart)
 }
 
 export default AddTimetable

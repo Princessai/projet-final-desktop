@@ -1,0 +1,15 @@
+.present:checked {
+    background-color: green;
+}
+
+.late:checked {
+    background-color: #FFC107;
+}
+
+.absent:checked {
+    background-color: #DC3545;
+}
+
+.form-check-input:checked[type=radio] {
+    --bs-form-check-bg-image: none; 
+}

@@ -1,4 +1,5 @@
 const { app, BrowserWindow } = require('electron');
+import installExtension, { REACT_DEVELOPER_TOOLS } from 'electron-devtools-installer';
 const path = require('node:path');
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
@@ -40,7 +41,7 @@ const createWindow = () => {
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
   // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // mainWindow.webContents.openDevTools();
 
 
   // mainWindow.once('ready-to-show', () => {
@@ -60,7 +61,11 @@ const createWindow = () => {
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
-  createWindow();
+  installExtension(REACT_DEVELOPER_TOOLS)
+  
+  .then((name) => {createWindow();
+  })
+  .catch((err) => console.log('An error occurred: ', err));
   // createSplash();
 
   // On OS X it's common to re-create a window in the app when the

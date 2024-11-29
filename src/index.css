@@ -21,3 +21,54 @@ body {
   scrollbar-width: none;
   width: 100%;
 }
+
+
+.content-container {
+  max-height: 560px;
+}
+
+.completionMessage {
+  width: 40%;
+  opacity: 0.9;
+
+}
+.completionMessage, .confirmationDiv {
+  padding: 20px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.confirmationDiv {
+  width: fit-content;
+}
+
+.noSessions {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.profile-picture {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.picture-container{
+  width: 60px;
+  height: 60px;
+}
+
+.picture-container-nav{
+  overflow: hidden;
+}
+
+.dataPickerContainer{
+  width: 20%;
+  max-width: fit-content;
+  height: 20px;
+  font-size: 12px;
+}

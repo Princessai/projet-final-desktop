@@ -1,7 +1,3 @@
-
-:root {
-    --close-button-size: 16px;
-  }
 .myTimetable {
     width: 100%;
     table-layout: fixed;
@@ -9,18 +5,33 @@
 
 }
 
+.myTimetable thead {
+    /* color: #FFFFFF; */
+}
 
-.TimeTableTimeScale div.tr,
+.myTimetable tbody {
+    /* background-color: #AAAAFF; */
+}
+
+
+.TimeTableTimeScaleSample {
+    margin-right: 20px;
+}
+
+.TimeTableTimeScaleSample div.tr,
 .myTimetable div.tr {
     height: 47px;
 }
 
-.TimeTableTimeScale div.td,
+.TimeTableTimeScaleSample div.td,
 .myTimetable div.td {
     height: 100%;
 }
 
-
+/* .myTimetable tbody tr td:first-child {
+    background-color: #FF0066;
+    font-weight: bold;
+} */
 .myTimetable div.td {
 
 
@@ -49,33 +60,30 @@ div.td {
     border: 10px solid black;
 
 
+}
 
-}
-.deleteTimetableElement{
-    /* position: absolute;
-    right: 0px;
-    top: 0px; */
-    min-height: var(--close-button-size);
-    min-width: var(--close-button-size);
-    width: var(--close-button-size);
-    height: var(--close-button-size);
-    align-self: flex-end;
-    justify-self: start;
-}
-.tbody .outerBorder{
-    top: 50%;
-    right: 50%;
-    transform: translate(50%,-50%);
-    z-index: 1000;
-}
 .tbody .innerBorder {
     z-index: 1000;
-
-    right: 0px;
 }
 
+/* div.tr  div.td:first-child {
+    border-right-width:0;
+} */
+/* div.tr div.td:nth-child(odd) {
+     border-right-width: 0; 
+    border: 10px solid rgb(0, 0, 0);
+} */
 
-.TimeTableTimeScale td {
+/* div.tr div.td:nth-child(even) {
+  
+    border: 10px solid rgb(73, 238, 8);
+    border-right-style: none;
+ 
+    border-left-style: solid;
+} */
+
+
+.TimeTableTimeScaleSample td {
     text-align: center;
     position: relative;
 
@@ -92,12 +100,9 @@ div.td {
 
 .myTimetable div.tbody {
     position: relative;
-    /* height: 100%; */
+    height: 100%;
 }
 
-.timetableHeader {
-    font-weight: 800;
-}
 
 div.empty_td {
     position: relative;
@@ -117,8 +122,11 @@ div.td div.empty_td {
     width: 100%;
     border: none;
     z-index: 10;
-    right: 0px;
- 
+    /* width: calc(100% - 20px); */
+    left: 50%;
+    transform: translateX(-50%);
+
+    /* background: cadetblue; */
 }
 
 div.td {
@@ -126,7 +134,7 @@ div.td {
 }
 
 .myTimetable div.tr.breaks div.td {
-    background-color: #E61845 ;
+    background-color: #E61845 !important;
     position: absolute;
     display: flex;
     height: 100%;
@@ -147,7 +155,7 @@ div.td {
     font-style: italic;
 }
 
-.TimeTableTimeScale th,
+.TimeTableTimeScaleSample th,
 .timeTableDayScale th {
     /* padding: 10px 0; */
     padding-bottom: 20px;
@@ -157,12 +165,6 @@ div.td {
     width: 100%;
 }
 
-.timeScaleElemnt,
-.specificTimeScaleElemnt {
-    position: absolute;
-    right: 50%;
-
-}
 
 .timeTableTimeScaleBody {
     width: 50px;
@@ -174,54 +176,35 @@ div.td {
     border: none;
 }
 
+.timeScaleElemnt,
+.specificTimeScaleElemnt {
+    position: absolute;
+    transform: translate(-100%, 50%);
+
+}
+
 .timeScaleElemnt {
-
+  
     bottom: 100%;
-    transform: translate(50%, 50%);
-
-
 }
 
 
 .specificTimeScaleElemnt {
-    transform: translate(50%, -50%);
+    transform: translate(-100%, -50%);
 }
 
 .timeScaleElemnt.timeScaleLastElemnt {
     top: 100%;
     height: min-content;
-    transform: translate(50%, -50%);
-}
-
-
-@media (max-width: 600px)  {
-    .myTimetable div.tr.breaks div.td {
-      background-color: rgb(41, 181, 228);
-    }
-  }
-
-.timeTableTdContainer  .td {
-    /* overflow-wrap: break-word; */
+    transform: translate(-100%, -50%);
+    
 }
 
 
 
-
-.innerBorder , .outerBorderContainer {
-    /* display: none; */
+.innerBorder{
+    display: none;
 }
 .breaks{
     /* display: none !important; */
-    /* pointer-events: none; */
-}
-
-.td_break_inner_container{
-    /* display: flex;
-    flex-direction: column;
-    height: 100%;*/
-    width: 100%; 
-   font-size:12px ;
-   overflow-x: hidden;
-   text-overflow: ellipsis;
-
 }

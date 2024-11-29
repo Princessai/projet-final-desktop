@@ -9,7 +9,12 @@
 
 }
 
+.timetableRow{
 
+}
+.TimeTableTimeScale{
+    overflow-wrap: 'break-word';
+}
 .TimeTableTimeScale div.tr,
 .myTimetable div.tr {
     height: 47px;
@@ -100,14 +105,12 @@ div.td {
 }
 
 div.empty_td {
-    position: relative;
-    z-index: -1;
+    /* position: relative;
+    z-index: -1; */
     background-color: green !important;
+    flex-grow: 1;
 }
 
-div.td div.empty_td {
-    position: absolute;
-}
 
 .myTimetable div.tr.breaks {
     font-style: italic;
@@ -211,8 +214,8 @@ div.td {
     /* display: none; */
 }
 .breaks{
-    /* display: none !important; */
-    /* pointer-events: none; */
+    /* display: none !important;  */
+    /* pointer-events: none;*/
 }
 
 .td_break_inner_container{
@@ -224,4 +227,7 @@ div.td {
    overflow-x: hidden;
    text-overflow: ellipsis;
 
+}
+.timetable_td{
+    z-index:20
 }

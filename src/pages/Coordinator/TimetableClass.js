@@ -7,83 +7,117 @@ import { Link, useParams } from 'react-router-dom';
 import Timetable from '../../components/Timetable';
 import { useAuth } from '../../Providers/AuthProvider';
 import { FallbackContent } from '../../components/FallbackContent';
+import { routeRegister } from '../../../route.js';
+import dayjs from 'dayjs';
 
 function TimetableClassPage() {
 
-    const { classe_id } = useParams();
+    const { classe_id, classe_label } = useParams();
 
     const [timetables, setTimetables] = useState([]);
 
     const [loading, setLoading] = useState(true);  // État de chargement
     const { axios } = useAxios();
 
-    const { currentYear } = useAuth();
+    const { currentYear, isUserAuthenticated } = useAuth();
 
     const annee_id = currentYear.id;
 
-    const interval = 0;
-  
-  
-    function fetchTimetables() {
-      console.log('fetch timetable');
-      axios.get(`/timetable/${classe_id}/${annee_id}/${interval}`)
-        .then(function (response) {
-  
-          const timetables = response.data;
 
-          setTimetables((oldvalue) => [...timetables]);
-          setLoading(false);
-          console.log(timetables);
-  
-        })
-        .catch(function (error) {
-          // handle error
-          console.log(error);
-        });
-  
-  
-    }
-  
-  
+    const interval = 0;
+
+
+    
+
+
     useEffect(function () {
-  
-        fetchTimetables()
-  
-  
-    }, [])
+        console.log('useffet', isUserAuthenticated)
+        let controller;
+        controller = new AbortController();
+
+        if (isUserAuthenticated) {
+                console.log('fetch timetable');
+                axios.get(`/timetable/${classe_id}/${annee_id}/${interval}`, {
+                    signal: controller.signal
+                })
+                    .then(function (response) {
+        
+                        const timetables = response.data;
+        
+                        setTimetables((oldvalue) => [...timetables]);
+                        setLoading(false);
+                        console.log(timetables);
+        
+                    })
+                    .catch(function (error) {
+                        // handle error
+                        console.log(error);
+                    });
+             
+        
+        }
+        return ()=>{
+            controller.abort()
+        }
+
+    }, [isUserAuthenticated])
+
+
+
+
 
 
     if (loading) return <FallbackContent />;
+    console.log('timetables(((((', timetables)
+    const currentTimetable = timetables[0];
+
+
+    const weekStart = currentTimetable.date_debut;
+
+    const weekEnd = currentTimetable.date_fin;
+
+    const date_debut = dayjs(weekStart).format('DD MMMM YYYY');
+
+    const date_fin = dayjs(weekEnd).format('DD MMMM YYYY');
+
+
+
+
+
 
 
     return (
+
         <div className='div-container d-flex flex-column'>
             <Navbar />
             <div className='body-content-container d-flex'>
                 <SidebarCoordinator />
                 <section className='content-container'>
-                    <div className="row">
-                        <div className="col-md-12 mb-4 mt-3 ms-5">
-                            <h1 className='py-3'>Timetable B3 Dev</h1>
+                    <div className="">
+                        <div className=" mb-4 mt-3 ps-5">
+                            <h1 className='py-3'>{classe_label}</h1>
                         </div>
-                        <div className="col-md-12 mb-5 d-flex">
-                            <div className="col-md-6 d-flex justify-content-evenly">
-                                <Link to={`/coordinator/timetable/class/${classe_id}`}>
+                        <div className="col-md-12 mb-5 d-flex justify-content-around">
+                            <div className="col-md-8 d-flex justify-content-between">
+                                {/* <Link to={routeRegister.getRoute('coordinatorTimetableClassPastimetable')}>
                                     <button type="button" className="btn btn-danger">Current Timetable</button>
-                                </Link>
+                                </Link> */}
 
+                                <Link>
+                                    <button type="button" className="btn btn-danger m-2 active">Current Timetable</button>
+                                </Link >
                                 <Link to={'/coordinator/timetable/class/pastimetable'}>
-                                    <button type="button" className="btn btn-danger">past Timetable</button>
+                                    <button type="button" className="btn btn-danger m-2">Past Timetable</button>
                                 </Link >
 
                                 <Link to={'/coordinator/timetable/class/Upcomingimetable'}>
-                                    <button type="button" className="btn btn-danger">Upcoming Timetable</button>
+                                    <button type="button" className="btn btn-danger m-2">Upcoming Timetable</button>
                                 </Link>
-                                
+
                             </div>
-                            <div className="col-md-6 d-flex justify-content-center">
-                                <Link to={'/coordinator/add-timetable'}>
-                                    <button type="button" className="btn btn-success">Add Timetable</button>
+                            <div className="col-md-2 d-flex justify-content-center">
+                                <Link to={`/coordinator/add-timetable/${classe_label}`}>
+                                    <button type="button" className="btn btn-success m-2">Add Timetable</button>
                                 </Link>
 
                             </div>
@@ -91,7 +125,19 @@ function TimetableClassPage() {
                         </div>
                         <div className="col-md-12">
 
-                            <Timetable />
+                            <div className='mx-5'>
+                                <h5 className='text-center fw-bold text-decoration-underline mb-5'> Timetable from {date_debut} to {date_fin}</h5>
+
+                                <Timetable TimetableData={currentTimetable} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
+
+
+                            </div>
+
+                            <div>
+                                <p className='text-center text-danger fw-bold text-decoration-underline'>NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
+                            </div>
+
+
 
                             {/* <div className='mx-5'>
                                 <h5 className='text-center fw-bold text-decoration-underline mb-3'>Emploi du temps B3 Développement Web du 13 mai 17 mai 24</h5>
@@ -288,6 +334,7 @@ function TimetableClassPage() {
                                     <p className='text-center text-danger fw-bold text-decoration-underline'>NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
                                 </div>
                             </div> */}
+
 
 
 

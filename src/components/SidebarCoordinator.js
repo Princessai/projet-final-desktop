@@ -8,8 +8,8 @@ function SidebarCoordinator() {
         <aside className='side-container container m-0'>
             <div className='side-bar d-flex flex-column align-items-center justify-content-center'>
                 <Button label={'Timetable'} linkto={routeRegister.getRoute("coordinatorhome")}/>
+                <Button label={'Classes'} linkto={'/coordinator/classes'}/>
                 <Button label={'Graphic'} linkto={'/coordinator/graphic'}/>
-                <Button label={'User'} linkto={'/coordinator/user'}/>
                 <Button label={'Call'} linkto={'/coordinator/call'}/>
             </div>
         </aside>

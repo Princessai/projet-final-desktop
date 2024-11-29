@@ -1,21 +1,30 @@
 .bloc-presence{
   border: 1px solid #707070;
-  padding: 15px;
-  width: 50%;
+  padding: 7px 10px;
+
+}
+
+.bloc-inactif, .bloc-presence {
+  width: 100%;
+  max-width: 777px;
   border-radius: 5px;
+  margin: 30px 15px;
 
 }
 
 .bloc-inactif{
 
   padding: 15px;
-  width: 50%;
-  border-radius: 5px;
   background-color: #eeeeee;
+
 }
 
 
 a{
     text-decoration: none;
     color: black;
+}
+
+.title-container{
+  width: fit-content;
 }

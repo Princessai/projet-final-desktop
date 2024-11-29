@@ -6,7 +6,6 @@ export const routeRegister = {
     },
 
     getRoute(route) {
-        console.log(this.actions);
         if (!this.actions[route]) {
             throw new Error("custom route don't exist")
         }
@@ -15,7 +14,6 @@ export const routeRegister = {
 
     setRoute(path, name = null) {
         if (name == null) {
-            console.log('null')
             this.actions[path] = path;
         } else {
            
@@ -52,7 +50,8 @@ routeRegister.setRoute("/coordinator/userClass/profil","coordinatoruserClassprof
 routeRegister.setRoute("/coordinator/userClass/profil/presence","coordinatoruserClassProfilPresence")
 routeRegister.setRoute("/coordinator/call","coordinatorCall")
 routeRegister.setRoute("/coordinator/call/session","coordinatorCallSession")
+routeRegister.setRoute("/coordinator/classes","coordinatorClasses")
+routeRegister.setRoute("/coordinator/classes/infos","coordinatorClassesInfos")
+routeRegister.setRoute("/coordinator/classes/modules","coordinatorClassesModules")
 
 
-
-console.log('routerrrrrrjjjsss');

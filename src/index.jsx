@@ -1,9 +1,24 @@
+
+
+
 import * as React from 'react';
 import { createRoot } from 'react-dom/client';
+import { RouterProvider, createHashRouter } from 'react-router-dom';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import 'bootstrap/dist/js/bootstrap.bundle.js';
 import './index.css';
-import { RouterProvider, createHashRouter } from 'react-router-dom';
+
+
+import { AuthContextProvider } from './Providers/AuthProvider.js';
+import { AxiosContextProvider } from './Providers/AxiosProvider.js';
+import { routeRegister } from '../route.js';
+import { ProtectedRoute } from './components/ProtectedRoute.js';
+
+
 import Login from './pages/Login/Login.js';
 import Home from './pages/Home/Home.js';
 import ProfilPage from './pages/Profil/ProfilPage.js';
@@ -28,11 +43,11 @@ import CoordinatorGraphicClass from './pages/Coordinator/GraphicClass.js'
 import CoordinatorGraphicClassDetails from './pages/Coordinator/GraphicClassDetails.js'
 import CoordinatorCall from './pages/Coordinator/Call.js'
 import CoordinatorCallSession from './pages/Coordinator/CallSession.js'
-import AddTimetable from './pages/Coordinator/addTimetable.js';
-import { AuthContextProvider } from './Providers/AuthProvider.js';
-import { AxiosContextProvider } from './Providers/AxiosProvider.js';
-import { routeRegister } from '../route.js';
-import { ProtectedRoute } from './components/ProtectedRoute.js';
+import AddTimetable from './pages/Coordinator/AddTimetable.js';
+import Classes from './pages/Coordinator/classes.js';
+import ClasseInfos from './pages/Coordinator/ClasseInfos.js';
+import Modules from './pages/Coordinator/Modules.js';
+
 
 
 
@@ -75,12 +90,12 @@ const router = createHashRouter([
   },
   {
     path: "/teacher/home",
-    element: < Teachersession />, //home teacher
+    element: <ProtectedRoute>< Teachersession /></ProtectedRoute>, //home teacher
   },
 
   {
-    path: "/teacher/session/call",
-    element: < Teachersessioncall />,
+    path: routeRegister.getRoute("teacherSessionCall") + "/:seance_id",
+    element: <ProtectedRoute>< Teachersessioncall /></ProtectedRoute>,
   },
   {
     path: "coordinator/graphic",
@@ -100,12 +115,12 @@ const router = createHashRouter([
     element: <ProtectedRoute>< CoordinatorTimetable /></ProtectedRoute>, // home coordinator
   },
   {
-    path: routeRegister.getRoute("coordinatorTimetableClass") + "/:classe_id",
+    path: routeRegister.getRoute("coordinatorTimetableClass") + "/:classe_id/:classe_label",
     element: <ProtectedRoute>< CoordinatorTimetableClass /></ProtectedRoute>,
   },
   {
-    path: "/coordinator/add-timetable",
-    element: <AddTimetable />,
+    path: routeRegister.getRoute('coordinatoradd-timetable') + "/:classe_label",
+    element: <ProtectedRoute><AddTimetable /></ProtectedRoute>,
   },
   {
     path: "/coordinator/timetable/class/pastimetable",
@@ -117,15 +132,15 @@ const router = createHashRouter([
   },
   {
     path: "/coordinator/user",
-    element: < CoordinatorUser />,
+    element: <ProtectedRoute>< CoordinatorUser /></ProtectedRoute>,
   },
   {
-    path: "/coordinator/userClass",
-    element: < CoordinatorUserClass />,
+    path: routeRegister.getRoute("coordinatorUserClass") + "/:classe_id/:classe_label",
+    element: <ProtectedRoute>< CoordinatorUserClass /></ProtectedRoute>,
   },
   {
-    path: "/coordinator/userClass/profil",
-    element: < CoordinatorUserClassProfil />,
+    path: routeRegister.getRoute("coordinatoruserClassprofil") + "/:student_id",
+    element: <ProtectedRoute>< CoordinatorUserClassProfil /></ProtectedRoute>,
   },
   {
     path: "/coordinator/userClass/profil/presence",
@@ -133,11 +148,23 @@ const router = createHashRouter([
   },
   {
     path: "/coordinator/call",
-    element: < CoordinatorCall />,
+    element: <ProtectedRoute>< CoordinatorCall /></ProtectedRoute>,
   },
   {
-    path: "/coordinator/call/session",
-    element: < CoordinatorCallSession />,
+    path: routeRegister.getRoute("coordinatorCallSession") + "/:mode/:seance_id/:seance_classe/:heure_debut/:heure_fin",
+    element: <ProtectedRoute>< CoordinatorCallSession /></ProtectedRoute>,
+  },
+  {
+    path: routeRegister.getRoute("coordinatorClasses"),
+    element: <ProtectedRoute>< Classes /></ProtectedRoute>,
+  },
+  {
+    path: routeRegister.getRoute("coordinatorClassesInfos") + "/:classe_id/:classe_label",
+    element: <ProtectedRoute><ClasseInfos /></ProtectedRoute>,
+  },
+  {
+    path: routeRegister.getRoute("coordinatorClassesModules") + "/:classe_id/:classe_label",
+    element: <ProtectedRoute><Modules /></ProtectedRoute>,
   },
 
 
@@ -149,14 +176,19 @@ const root = createRoot(document.getElementById('root'));
 console.log('React application is about to render');
 
 root.render(
+  // <React.StrictMode>
   <AxiosContextProvider>
     <AuthContextProvider>
-      {/* <React.StrictMode> */}
+     
+      <LocalizationProvider dateAdapter={AdapterDayjs}>
       <RouterProvider router={router} />
 
-      {/* </React.StrictMode> */}
+    
+      </LocalizationProvider>
     </AuthContextProvider>
   </AxiosContextProvider>
+  // </React.StrictMode>
+
 
 );
 

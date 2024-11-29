@@ -1,0 +1,98 @@
+.myTimetable {
+    width: 100%;
+    table-layout: fixed;
+    border-spacing: 0px;
+
+}
+
+.myTimetable thead {
+    /* color: #FFFFFF; */
+}
+
+.myTimetable tbody {
+    /* background-color: #AAAAFF; */
+}
+
+.myTimetable td {
+    border: 10px solid black;
+
+    text-align: center;
+    position: relative;
+
+
+}
+
+.TimeTableTimeScale td,
+.myTimetable td,
+.TimeTableTimeScale tr,
+.myTimetable tr {
+    height: 47px;
+}
+
+/* .myTimetable tbody tr td:first-child {
+    background-color: #FF0066;
+    font-weight: bold;
+} */
+.TimeTableTimeScale td {
+
+    text-align: center;
+    position: relative;
+
+
+}
+
+.myTimetable tbody {
+    position: relative;
+}
+
+.myTimetable tr.breaks {
+    position: relative;
+
+    font-style: italic;
+    padding: 0 !important;
+    font-weight: bold;
+    position: absolute;
+    top: 12.5%;
+    width: 100%;
+    border:none;
+    
+    /* background: cadetblue; */
+}
+
+.myTimetable tr.breaks td {
+    background-color: #E61845 !important;
+    position: absolute;
+    display: flex;
+    height: 100%;
+    width: 100%;
+    align-items: center;
+    justify-content: center;
+    border:none;
+    padding: 0;
+}
+
+.subject {
+    font-size: 12pt;
+    margin-bottom: 4px;
+}
+
+.room {
+    font-size: 10pt;
+    font-style: italic;
+}
+
+
+
+.timeScaleElemnt {
+    position: absolute;
+    bottom: 100%;
+    transform: translate(50%, 50%);
+    right: 50%;
+
+}
+
+.timeScaleElemnt.timeScaleLastElemnt {
+    top: 100%;
+    height: min-content;
+    transform: translate(50%, -50%);
+}
