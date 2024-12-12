@@ -34,9 +34,7 @@ function Navbar() {
             <nav className="navbar navbar-expand-lg">
 
                 <div className="collapse  d-flex justify-content-between navbar-collapse pe-3" id="navbarNavAltMarkup">
-                    <Link className="navbar-brand" to={`/`}>
                         <img src={LogoWhite} alt='logo trackIn ifran white' />
-                    </Link>
 
                     <div className="navbar-nav d-flex flex-row align-items-center justif-content-center">
                         <div className='d-flex mx-3 align-items-center justif-content-center'>

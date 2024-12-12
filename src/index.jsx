@@ -44,9 +44,10 @@ import CoordinatorGraphicClassDetails from './pages/Coordinator/GraphicClassDeta
 import CoordinatorCall from './pages/Coordinator/Call.js'
 import CoordinatorCallSession from './pages/Coordinator/CallSession.js'
 import AddTimetable from './pages/Coordinator/AddTimetable.js';
-import Classes from './pages/Coordinator/classes.js';
+import Classes from './pages/Coordinator/Classes.js';
 import ClasseInfos from './pages/Coordinator/ClasseInfos.js';
 import Modules from './pages/Coordinator/Modules.js';
+import ChildProfilePage from './pages/Parent/ChildProfilePage.js';
 
 
 
@@ -62,31 +63,35 @@ const router = createHashRouter([
   },
   {
     path: "/student/timetable",
-    element: <TimetablePage />,
+    element: <ProtectedRoute><TimetablePage /></ProtectedRoute>,
   },
   {
     path: "/student/profil/presence",
-    element: <ProfilPresencePage />,
+    element: <ProtectedRoute><ProfilPresencePage /></ProtectedRoute>,
   },
   {
     path: "/student/profil",
-    element: <ProfilPage />,
+    element:<ProtectedRoute><ProfilPage /></ProtectedRoute> ,
+  },
+  {
+    path: "/child/profil",
+    element:<ProtectedRoute><ChildProfilePage /></ProtectedRoute> ,
   },
   {
     path: "/student/missing",
-    element: < MissingPage />,
+    element: <ProtectedRoute>< MissingPage /></ProtectedRoute>,
   },
   {
     path: "/student/presence",
-    element: < PresenceHome />,
+    element:<ProtectedRoute>< PresenceHome /></ProtectedRoute> ,
   },
   {
     path: "/student/presence/details",
-    element: < Presencedetails />,
+    element:<ProtectedRoute>< Presencedetails /></ProtectedRoute> ,
   },
   {
     path: "/parent/home", // home parent
-    element: < Parentchoice />,
+    element: <ProtectedRoute>< Parentchoice /></ProtectedRoute>,
   },
   {
     path: "/teacher/home",
@@ -99,15 +104,15 @@ const router = createHashRouter([
   },
   {
     path: "coordinator/graphic",
-    element: < CoordinatorGraphic />,
+    element: <ProtectedRoute>< CoordinatorGraphic /></ProtectedRoute>
   },
   {
     path: "coordinator/graphic/class",
-    element: < CoordinatorGraphicClass />,
+    element: <ProtectedRoute>< CoordinatorGraphicClass /></ProtectedRoute>,
   },
   {
     path: "coordinator/graphic/class/details",
-    element: < CoordinatorGraphicClassDetails />,
+    element: <ProtectedRoute>< CoordinatorGraphicClassDetails /></ProtectedRoute>,
   },
 
   {

@@ -1,23 +1,31 @@
-import React from 'react';
-import Navbar from '../../components/Navbar';
-import Sidebar from '../../components/Sidebar';
-import Footer from '../../components/Footer';
-import { Link, useLocation } from 'react-router-dom';
-import Profile from '../../components/Profile';
+import React from 'react'
+import Navbar from '../../components/Navbar'
+import Profile from '../../components/Profile'
+import Footer from '../../components/Footer'
+import SideBarParent from '../../components/SideBarParent'
+import { useLocation } from 'react-router-dom'
 
-function StudentProfil() {
+function ChildProfilePage() {
+
+    const {state} = useLocation();
+    
+    // const child = location.state;
+    const child = state.child;
+
+    console.log("🚀 ~ StudentProfil ~ state:", state)
+
+    return (
+        <div className='div-container d-flex flex-column'>
+            <Navbar />
+            <div className='body-content-container d-flex'>
+                <SideBarParent />
+                <section className='content-container'>
+                    <div className="row">
+
+                        <Profile student= {child}/>
 
 
-  return (
-    <div className='div-container d-flex flex-column'>
-      <Navbar />
-      <div className='body-content-container d-flex'>
-        <Sidebar />
-        <section className='content-container'>
-          <div className="row">
-
-            <Profile />
-            {/* <div className="col-md-12 d-flex  mb-5 mt-3 ms-5">
+                        {/* <div className="col-md-12 d-flex  mb-5 mt-3 ms-5">
               <img src="..." className="rounded-circle me-5" alt="..." />
               <h2>
                 NATHAN FOLLIN
@@ -63,15 +71,14 @@ function StudentProfil() {
 
 
             </div> */}
-          </div>
+                    </div>
 
-        </section>
-      </div>
+                </section>
+            </div>
 
-      <Footer />
-    </div>
-
-  )
+            <Footer />
+        </div>
+    )
 }
 
-export default StudentProfil
+export default ChildProfilePage

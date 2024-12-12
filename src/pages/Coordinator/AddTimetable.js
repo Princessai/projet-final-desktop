@@ -64,14 +64,34 @@ function derivedMaxDate(timetableStart, weekStart) {
     return dayjs(date).day(7);
 }
 
-function onTdFocus() {
-    
+// function getDay(index) {
+//     return dayjs().day(index).format('dddd');
+// }
+
+
+function onTdFocus(event, td, dayNumber) {
+    console.log('td', td);
+    const dataset = td.dataset;
+    const row = dataset.row;
+    const column = dataset.col;
+    console.log(dayNumber);
+    // let timetableStart = timetableProps.timetableStart;
+
+    // if (!timetableStart) return;
+
+    // timetableStart = dayjs(timetableStart)
+    //     .set('hours', 0)
+    //     .set('minutes', 0)
+    //     .add(column, 'day');
+
+    // const dayNumber = timetableStart.date();
+
+    // console.log('proooops start', timetableProps.timetableStart, 'dayNumber', dayNumber);
+    // console.log('dayname',getDay(column));
+
+    // dayjs().day().format('dddd');
+
 }
-
-
-
-
-
 
 
 
@@ -164,7 +184,7 @@ function AddTimetable() {
                                                 minDate={derivedMinDate(timetableStart, weekStart)}
                                                 maxDate={derivedMaxDate(timetableStart, weekStart)}
                                                 onChange={selectTimetableEnd}
-                                                value={timetableEnd===null?null:dayjs(timetableEnd)}
+                                                value={timetableEnd === null ? null : dayjs(timetableEnd)}
 
                                             />
                                         </div>

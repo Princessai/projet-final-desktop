@@ -51,7 +51,6 @@ export function ProtectedRoute({ roles = null, middleware = null, children }) {
         const token = localStorage.getItem('token');
         if (token == null) {
             navigate(routeRegister.getRoute('login'));
-            console.log("redirecttt")
         } else {
             console.log("tokenn protected", token);
 

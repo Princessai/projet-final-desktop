@@ -231,3 +231,10 @@ div.td {
 .timetable_td{
     z-index:20
 }
+.td_container{
+    position: relative;
+}
+div.td_container div.timetable_td{
+    position: absolute;
+    width: 100%;
+}

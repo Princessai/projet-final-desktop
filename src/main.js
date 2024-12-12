@@ -62,10 +62,11 @@ const createWindow = () => {
 // Some APIs can only be used after this event occurs.
 app.whenReady().then(() => {
   installExtension(REACT_DEVELOPER_TOOLS)
-  
-  .then((name) => {createWindow();
-  })
-  .catch((err) => console.log('An error occurred: ', err));
+
+    .then((name) => {
+      createWindow();
+    })
+    .catch((err) => console.log('An error occurred: ', err));
   // createSplash();
 
   // On OS X it's common to re-create a window in the app when the

@@ -10,7 +10,6 @@ import { FallbackContent } from "./FallbackContent";
 import { useParams } from "react-router-dom";
 import { throttle, debounce } from "../../utilities/debounce_throttle.js";
 
-
 const timetableMode = {
   read: "read",
   edit: "edit",
@@ -20,27 +19,12 @@ let isWaitingGlobal = true;
 let currentTimetableMode;
 
 function convertTimeStringToHour(timeString) {
+  const timeStringValues = String(timeString).split(":");
 
-  let timeStringHour
-  let timeStringMinute
-  let timeStringMinuteTohour
-  let totalHour
-
-  if (dayjs.isDayjs(timeString)) {
-    timeStringHour = timeString.hour()
-    timeStringMinute = timeString.minute()
-    timeStringMinuteTohour = timeStringMinute / 60
-    totalHour = timeStringHour + (timeStringMinuteTohour)
-
-  } else {
-    const timeStringValues = String(timeString).split(":");
-
-    timeStringHour = parseInt(timeStringValues[0] ?? 0);
-    timeStringMinute = parseInt(timeStringValues[1] ?? 0);
-    timeStringMinuteTohour = timeStringMinute / 60;
-    totalHour = timeStringMinuteTohour + timeStringHour;
-  }
-
+  const timeStringHour = parseInt(timeStringValues[0] ?? 0);
+  const timeStringMinute = parseInt(timeStringValues[1] ?? 0);
+  const timeStringMinuteTohour = timeStringMinute / 60;
+  const totalHour = timeStringMinuteTohour + timeStringHour;
   return {
     timeStringMinute,
     timeStringMinuteTohour,
@@ -49,29 +33,30 @@ function convertTimeStringToHour(timeString) {
   };
 }
 
-function timesStringdiffInHour(timeString1, timeString2, abs = true) {
+function timesStringdiffInHour(timeString1, timeString2) {
   timeString1 = convertTimeStringToHour(timeString1).totalHour;
   timeString2 = convertTimeStringToHour(timeString2).totalHour;
-  const diff = timeString1 - timeString2;
-  if (!abs) return diff
+  let diff = timeString1 - timeString2;
   return Math.abs(diff);
 }
 
-function smallestMultiplicativeFactor(step, minStep) {
-  let divisor = 1;
-  let multiplicativeFactor;
-  if (!minStep) {
-    return step
-  }
-  while (true) {
-    multiplicativeFactor = (step / divisor);
-    if (multiplicativeFactor <= minStep) {
-      return multiplicativeFactor;
+function orderSeances(seances) {
+  const seancesByDayArr = [];
+  seances.forEach(function (seance, index) {
+    const heure_debut = dayjs(seance.heure_debut); // Get the current date
+
+    const dayOfWeek = heure_debut.day();
+
+    const dayIndex = dayOfWeek - 1;
+
+    const seanceObj = { seance, index };
+    if (seancesByDayArr[dayIndex]) {
+      seancesByDayArr[dayIndex].push(seanceObj);
+    } else {
+      seancesByDayArr[dayIndex] = [seanceObj];
     }
-
-    divisor++
-  }
-
+  });
+  return seancesByDayArr;
 }
 
 function roundUpToStep(num, step = 0.25) {
@@ -96,7 +81,7 @@ function TimetableBreakTd({
   const tdRef = useRef(null);
   useEffect(function () {
     if (onCreate) {
-      onCreate(tdRef.current, { columnNumber, rowNumber, currentBreak, style });
+      // onCreate(tdRef.current, { columnNumber, rowNumber, currentBreak, style });
     }
   });
 
@@ -118,29 +103,32 @@ function TimetableBreakTd({
   );
 }
 
-function TimetableTd(props) {
-  const {
-    seance,
-    style,
-    onCreate,
-    hoursSteps,
-    columnNumber,
-    rowNumber,
-    tdNumber,
-    index,
-  } = props;
+function TimetableTd({
+  seance,
+  style,
+  onCreate,
+  hoursSteps,
+  columnNumber,
+  rowNumber,
+  tdNumber,
+  index,
+}) {
   console.log("td _rerender___");
+  console.log(seance);
   const tdRef = useRef(null);
 
   const hasRunOnce = useRef(false);
 
   useEffect(function () {
     // console.log("tdNumber", tdNumber, "tdRef.current", tdRef.current);
-    onCreate(tdRef.current, {
-      ...props,
-      hasRunOnce: hasRunOnce.current,
-
-    });
+    // onCreate(tdRef.current, {
+    //   hoursSteps,
+    //   columnNumber,
+    //   rowNumber,
+    //   tdNumber: tdNumber,
+    //   hasRunOnce: hasRunOnce.current,
+    //   style,
+    // });
     hasRunOnce.current = true;
   });
   const type_seance = seance.type_seance.label;
@@ -169,7 +157,7 @@ function TimetableTd(props) {
   );
 }
 
-
+function timetableElementClicked(event, td) { }
 
 function Timetable(props) {
   const {
@@ -181,10 +169,8 @@ function Timetable(props) {
     timetableStart,
     timetableEnd,
     mode = timetableMode.edit,
-
+    timetableStep = 5,
   } = props
-
-  let timetableStep = props.timetableStep ? props.timetableStep : '00:30';
 
 
   const tdRefsobj = {};
@@ -197,11 +183,8 @@ function Timetable(props) {
   let tdRefsRow = [];
   let breaksRefs = [];
   let breaksRefsRow = [];
-  let timeScaleOverflow = [];
   const [reloadContent, setReloadContent] = useState(false);
   currentTimetableMode = mode;
-  const minStep = useRef(null);
-
   function onBreakcreate(breakRef, props) {
     const { columnNumber, rowNumber, currentBreak, style } = props;
 
@@ -212,7 +195,33 @@ function Timetable(props) {
 
     const rowspanRounded = roundUpToStep(breakDuration, step) / step;
 
+    // const breakOffsetHeight = breakRef.offsetHeight;
+    // const breakScrollHeight = breakRef.scrollHeight;
+    // if (prevRowNumber != rowNumber) {
+    //     console.log('row change  due to  breaks element __ ', rowNumber)
 
+    // breaksRefsRow.forEach((breakRef, index) => {
+    //     if (index == 0 && prevBreakHeightDiff!=0) {
+    //         console.log(prevBreakHeightDiff)
+    //         const tr = breakRef.closest('.timetableRow.tr');
+    //         // tr.style.height = tr.offsetHeight + prevBreakHeightDiff + 'px'
+    //         console.log('index__', index)
+    //         console.log(breaksRefsRow)
+
+    //     }
+    // if(prevBreakHeightDiff!=0){
+    //         //     breakRef.style.height = breakRef.offsetHeight + prevBreakHeightDiff + 'px';
+
+    //         // }
+    //     });
+    //     console.log('break___*', breakRef, rowNumber)
+    //     breaksRefsRow = [];
+    //     prevBreakHeightDiff = 0;
+    //     prevRowNumber = rowNumber;
+    // }
+
+    // breaksRefsRow.push(breakRef);
+    // console.log("breakRef", breakRef);
 
     breaksRefs.push({
       rowNumber,
@@ -220,7 +229,17 @@ function Timetable(props) {
       rowspan: rowspanRounded - 1,
       style,
     });
+    // let heightDiff = 0
 
+    // if (breakOffsetHeight < breakScrollHeight) {
+
+    //     heightDiff = breakScrollHeight - breakOffsetHeight;
+    //     console.log('breakCreate', breakRef, breakOffsetHeight, breakScrollHeight, heightDiff)
+
+    // }
+    // if (heightDiff > prevBreakHeightDiff) {
+    //     prevBreakHeightDiff = heightDiff;
+    // }
   }
 
   console.log("timetable  rerenderr");
@@ -251,13 +270,13 @@ function Timetable(props) {
     return () => {
       window.removeEventListener("resize", onScreenResizeDecorator);
 
-      currentTimetableMode = null;
+      currentTimetableMode = undefined;
     };
   }, []);
 
   useEffect(function () {
     console.log("full ___timetable  in domm");
-    console.log('tdRefsobj', tdRefsobj)
+    // console.log('tdRefsobj', tdRefsobj)
     // console.log('modifiedTrsObj', modifiedTrsObj)
     // console.log('breaksRefs', breaksRefs)
 
@@ -268,8 +287,7 @@ function Timetable(props) {
         let tdRowSpan = currentRow;
         let spanAmount = tdObj.rowspan;
         let heightIncrease = 0;
-        console.log('spanAmount', tdObj.ref, spanAmount)
-        while (spanAmount > 0) {
+        while (spanAmount >= 1) {
           tdRowSpan++;
           if (modifiedTrsObj[tdRowSpan]) {
             heightIncrease += modifiedTrsObj[tdRowSpan];
@@ -306,10 +324,8 @@ function Timetable(props) {
         while (rowspan > 0) {
           rowNumber++;
           const increaseAmount = modifiedTrsObj[rowNumber];
-          if (increaseAmount !== undefined) {
-            heightIncrease += increaseAmount;
-
-          }
+          if (increaseAmount === undefined) break;
+          heightIncrease += increaseAmount;
           rowspan--;
         }
 
@@ -328,44 +344,8 @@ function Timetable(props) {
 
   const seances = TimetableData.seances;
 
+ 
 
-
-
-  const seancesByDayArr = useMemo(() => {
-    console.log('seancesByDayArr')
-
-
-    const seancesByDayArr = [];
-    seances.forEach(function (seance, index) {
-      const heure_debut = dayjs(seance.heure_debut);
-      if (minStep.current == null) {
-        minStep.current = seance.duree;
-      }// Get the current date
-      if (minStep.current > seance.duree) {
-        minStep.current = seance.duree;
-      }
-      const dayOfWeek = heure_debut.day();
-
-      const dayIndex = dayOfWeek - 1;
-
-      const seanceObj = { seance, index };
-      if (seancesByDayArr[dayIndex]) {
-        seancesByDayArr[dayIndex].push(seanceObj);
-      } else {
-        seancesByDayArr[dayIndex] = [seanceObj];
-      }
-    });
-    return seancesByDayArr;
-
-  }, [seances]);
-
-  const { totalHour: timetableStepInHours } = convertTimeStringToHour(timetableStep);
-
-
-  if (timetableStepInHours > minStep.current) {
-    timetableStep = smallestMultiplicativeFactor(timetableStepInHours, minStep.current);
-    console.log('timetableStep', timetableStep)
-  }
   const {
     timeStringHour: stepHour,
     timeStringMinute: stepMinute,
@@ -374,21 +354,27 @@ function Timetable(props) {
 
   const step = stepHour + timeStringMinuteTohour;
 
+  const seancesByDayArr = useMemo(() => {
+    return orderSeances(seances);
+  }, [seances]);
+  //    console.log('____maxDay____',dayjs(timetableEnd),'timetableEnd',timetableEnd
+  // //    .diff(timetableStart)
+  // )
 
+  let maxDay = 4;
 
-
-
-
-  const maxDay = (timetableEnd !== null || timetableStart !== null) ? dayjs(timetableEnd).diff(timetableStart, "day") : 4;
-
+  if (timetableEnd !== null || timetableStart !== null) {
+    maxDay = dayjs(timetableEnd).diff(timetableStart, "day");
+  }
 
   const dayStartHourString = 9;
   const dayEndHourString = 17;
   const { totalHour: dayStartHour } =
     convertTimeStringToHour(dayStartHourString);
   const { totalHour: dayEndHour } = convertTimeStringToHour(dayEndHourString);
-  const rowHeight = (timetableHeight - borderWidth) / Math.round(((dayEndHour - dayStartHour) / step));
-  console.log('rowheight', Math.round(((dayEndHour - dayStartHour) / step)))
+  const rowHeight =
+    (timetableHeight - borderWidth) / ((dayEndHour - dayStartHour) / step);
+  console.log('rowheight', rowHeight, (dayEndHour - dayStartHour))
   let timescaleWidthInPercentage = false;
   let timeScaleWidthUnit;
   timeScaleWidthUnit = timeScaleWidth;
@@ -457,110 +443,50 @@ function Timetable(props) {
     const timeTableBreaksTr = [];
     let currentSpecificTimeScale = [];
 
-    function isSpecificTimeScale(timeString) {
+    function isSpecificTimeScale(seanceObject) {
+      const seanceStartInhourSteps = seanceObject.startTotalHour - dayStartHour;
+      const seanceEndInhourSteps = seanceObject.endTotalHour - dayEndHour;
 
-      console.log('totalHour__***', timeString)
-      const { totalHour: totalInHour } = convertTimeStringToHour(timeString);
-
-      if (totalInHour == dayStartHour) return;
-      if (totalInHour == dayEndHour) return;
-      const seanceOffsetInhour = totalInHour - dayStartHour;
-
-      if ((!Number.isInteger(seanceOffsetInhour / timetableStepInHours))
+      if (
+        seanceStartInhourSteps != 0 &&
+        !Number.isInteger(seanceStartInhourSteps / step)
       ) {
-        console.log('specificTimeScale', specificTimeScale)
         if (
-          specificTimeScale.length == 0 || !specificTimeScale.includes(timeString)
-
+          specificTimeScale.length == 0 ||
+          specificTimeScale.indexOf(
+            (timeScale) => timeScale.totalHour == seanceObject.startTotalHour
+          ) == -1
         ) {
-
-          currentSpecificTimeScale.push(timeString);
-          specificTimeScale.push(timeString);
+          const specificTime = {
+            totalHour: seanceObject.startTotalHour,
+            minutes: seanceObject.startMinute,
+            hours: seanceObject.startHour,
+          };
+          currentSpecificTimeScale.push(specificTime);
+          specificTimeScale.push(specificTime);
         }
       }
 
-
+      if (
+        seanceEndInhourSteps != 0 &&
+        !Number.isInteger(seanceEndInhourSteps / step)
+      ) {
+        if (
+          specificTimeScale.length == 0 ||
+          specificTimeScale.indexOf(
+            (timeScale) => timeScale.totalHour == seanceObject.endTotalHour
+          ) == -1
+        ) {
+          const specificTime = {
+            totalHour: seanceObject.endTotalHour,
+            minutes: seanceObject.endMinute,
+            hours: seanceObject.endHour,
+          };
+          currentSpecificTimeScale.push(specificTime);
+          specificTimeScale.push(specificTime);
+        }
+      }
     }
-
-    // function isSpecificTimeScaleSeanceEnd(seanceObject) {
-    //   // dayStartHour -
-    //   const seanceEndInhourSteps = seanceObject.endTotalHour - dayEndHour;
-
-
-
-    //   if (
-    //     seanceEndInhourSteps != 0 &&
-    //     !Number.isInteger(seanceEndInhourSteps / timetableStepInHours)
-    //   ) {
-    //     if (
-    //       specificTimeScale.length == 0 ||
-    //       specificTimeScale.findIndex(
-    //         (timeScale) => timeScale.totalHour == seanceObject.endTotalHour
-    //       ) == -1
-    //     ) {
-    //       const specificTime = {
-    //         totalHour: seanceObject.endTotalHour,
-
-    //       };
-    //       currentSpecificTimeScale.push(specificTime);
-    //       specificTimeScale.push(specificTime);
-    //     }
-    //   }
-    // }
-
-
-    // function isSpecificTimeScale(seanceObject) {
-
-    //   const seanceStartInhourSteps = seanceObject.startTotalHour - dayStartHour;
-    //   const seanceEndInhourSteps = seanceObject.endTotalHour - dayEndHour;
-
-    //   if (
-    //     seanceStartInhourSteps != 0 &&
-    //     !Number.isInteger(seanceStartInhourSteps / timetableStepInHours)
-    //   ) {
-    //     const isInspecificTimeScale = specificTimeScale.findIndex(
-
-    //       (timeScale) => {
-
-    //         return timeScale.totalHour == seanceObject.startTotalHour
-    //       }
-    //     ) == -1
-
-    //     if (
-    //       specificTimeScale.length == 0 || isInspecificTimeScale
-
-    //     ) {
-    //       const specificTime = {
-    //         totalHour: seanceObject.startTotalHour,
-    //         minutes: seanceObject.startMinute,
-    //         hours: seanceObject.startHour,
-    //       };
-    //       currentSpecificTimeScale.push(specificTime);
-    //       specificTimeScale.push(specificTime);
-    //     }
-    //   }
-
-    //   if (
-    //     seanceEndInhourSteps != 0 &&
-    //     !Number.isInteger(seanceEndInhourSteps / timetableStepInHours)
-    //   ) {
-    //     if (
-    //       specificTimeScale.length == 0 ||
-    //       specificTimeScale.findIndex(
-    //         (timeScale) => timeScale.totalHour == seanceObject.endTotalHour
-    //       ) == -1
-    //     ) {
-    //       const specificTime = {
-    //         totalHour: seanceObject.endTotalHour,
-    //         minutes: seanceObject.endMinute,
-    //         hours: seanceObject.endHour,
-    //       };
-    //       currentSpecificTimeScale.push(specificTime);
-    //       specificTimeScale.push(specificTime);
-    //     }
-    //   }
-    // }
-
 
     if (hoursSteps !== dayStartHour) {
       formatTime = formatTime.add(stepHour, "hour").add(stepMinute, "minute");
@@ -577,25 +503,26 @@ function Timetable(props) {
 
     let isBreakRowFull = false;
     const matchingBreaksIndexes = [];
-    let timeTableBreaksCounter = -1;
+
     for (let breakIndex = 0; breakIndex < timetableALLBreaks.length;) {
       const timeTablebreak = timetableALLBreaks[breakIndex];
-
-
+      const breakStartString = String(timeTablebreak.debut);
+      const breakEndString = String(timeTablebreak.fin);
       console.log(timeTablebreak.debut, breakIndex)
 
       const {
         totalHour: breakStartTotalHour,
         timeStringMinute: breakStartMinute,
         timeStringHour: breakStartHour,
-      } = convertTimeStringToHour(timeTablebreak.debut);
+      } = convertTimeStringToHour(breakStartString);
 
       const {
         totalHour: breakEndTotalHour,
         timeStringMinute: breakEndMinute,
         timeStringHour: breakEndHour,
-      } = convertTimeStringToHour(timeTablebreak.fin);
+      } = convertTimeStringToHour(breakEndString);
 
+      console.log('looking for break', breakStartString, breakStartTotalHour, hoursSteps, timetableALLBreaks)
 
       if (
         breakStartTotalHour == hoursSteps ||
@@ -618,23 +545,18 @@ function Timetable(props) {
         const breakHeight = (breakDuration * rowHeight) / step + "px";
 
         const breakTop = ((breakStartTotalHour - hoursSteps) * rowHeight) / step + "px";
-
         console.log('breakTop', breakTop, breakStartTotalHour, hoursSteps, breakStartTotalHour - hoursSteps)
 
         if (!timeTablebreak.only) {
           // isBreakRowFull = true;
 
           if (mode == timetableMode.read) {
-
-
-            timeTableBreaksCounter++
-
             const breaksTdStyle = {
               width: "100%",
               height: breakHeight,
               top: breakTop,
             };
-
+            console.log(timeTablebreak);
             timeTableBreaksTr.push(
               <TimetableBreakTd
                 key={breakKey}
@@ -646,180 +568,135 @@ function Timetable(props) {
               />
             );
           }
-          isSpecificTimeScale(
-            timeTablebreak.debut,
 
-          )
-          isSpecificTimeScale(
-            timeTablebreak.fin,
-
-          )
-          // isSpecificTimeScale({
-          //   startTotalHour: breakStartTotalHour,
-          //   endTotalHour: breakEndTotalHour,
-          //   startMinute: breakStartMinute,
-          //   endMinute: breakEndMinute,
-          //   startHour: breakStartHour,
-          //   endHour: breakEndHour,
-          // });
+          isSpecificTimeScale({
+            startTotalHour: breakStartTotalHour,
+            endTotalHour: breakEndTotalHour,
+            startMinute: breakStartMinute,
+            endMinute: breakEndMinute,
+            startHour: breakStartHour,
+            endHour: breakEndHour,
+          });
 
           if (mode == timetableMode.edit) {
             matchingBreaksIndexes.push({ breakIndex, breakHeight, breakTop, isBreakRowFull: true });
           }
 
-        } else {
-
-          matchingBreaksIndexes.push({ breakIndex, breakHeight, breakTop, isBreakRowFull: false });
-
+          // break;
         }
+        matchingBreaksIndexes.push({ breakIndex, breakHeight, breakTop, isBreakRowFull: false });
       }
 
       breakIndex++;
     }
 
 
+    const prevDayBreak = {
+      breakIndex: null,
+      withOnly: null,
+    };
 
-    const prevDayBreak = [];
-    console.log('hoursSteps', hoursSteps, hoursStepsEnd)
-    // console.log('seances+++', dayStepStart.format('YYYY-MM-DD HH:mm:ss'), dayStepEnd.format('YYYY-MM-DD HH:mm:ss'));
+    let timeTableBreaksCounter = -1;
 
-    //   const { totalHour: dayStepEndInHours } = convertTimeStringToHour(dayStepEnd)
-    //   const { totalHour: dayStepStartInHours } = convertTimeStringToHour(dayStepStart)
-
-
-    timeScaleOverflow = timeScaleOverflow.filter((timeScale) => {
-      const { totalHour: timeScaleInHours } = convertTimeStringToHour(timeScale)
-      console.log('timeScaleInHours', timeScaleInHours)
-
-      if ((timeScaleInHours >= hoursSteps && timeScaleInHours <= hoursStepsEnd)) {
-
-        console.log('overFlowTimeScaleafter', timeScale, hoursSteps, timeScaleInHours, hoursStepsEnd)
-
-        isSpecificTimeScale(timeScale)
-
-        return false;
-      }
-      return true;
-    });
-
-    console.log('timeScaleOverflowArr', timeScaleOverflow)
-    const rowSeanceStartArr = [];
     for (let dayCount = 0; dayCount <= maxDay;) {
       const key = `day_${dayCount}_${hoursSteps}`;
-
-
-
-      for (
-        let matchingBreaksIndexe = 0;
-        matchingBreaksIndexe < matchingBreaksIndexes.length;
-
+      matchingBreaksIndexes.forEach()
+      if (
+        (isBreakRowFull == false &&
+          (mode == timetableMode.read || mode == timetableMode.edit)) ||
+        (isBreakRowFull == true && mode == timetableMode.edit)
       ) {
+        
+        for (
+          let matchingBreaksIndexe = 0;
+          matchingBreaksIndexe < matchingBreaksIndexes.length;
 
-        const breakKey = key + "_" + matchingBreaksIndexe;
-        const currentMatchingBreaksIndexe =
-          matchingBreaksIndexes[matchingBreaksIndexe];
-        const breakIndex = currentMatchingBreaksIndexe.breakIndex;
-        const timeTablebreakAtIndex = timetableALLBreaks[breakIndex];
-        const top = currentMatchingBreaksIndexe.breakTop;
-        const height = currentMatchingBreaksIndexe.breakHeight;
-
-        const currentDayBreak = prevDayBreak[matchingBreaksIndexe];
-
-        if (
-          mode == timetableMode.read &&
-          timeTablebreakAtIndex.only &&
-          timeTablebreakAtIndex.only.includes(dayCount)
         ) {
-          let prevBreakDayCount = null;
 
-          if (currentDayBreak && currentDayBreak.prevDay) {
-            prevBreakDayCount = currentDayBreak.prevDay;
-          }
+          const breakKey = key + "_" + matchingBreaksIndexe;
+          const currentMatchingBreaksIndexe =
+            matchingBreaksIndexes[matchingBreaksIndexe];
+          const breakIndex = currentMatchingBreaksIndexe.breakIndex;
+          const timeTablebreakAtIndex = timetableALLBreaks[breakIndex];
+          const top = currentMatchingBreaksIndexe.breakTop;
+          const height = currentMatchingBreaksIndexe.breakHeight;
 
-
-          const prevDaycount = dayCount === 0 ? 0 : dayCount - 1;
 
           if (
-            prevBreakDayCount == null ||
-            prevBreakDayCount !== prevDaycount
-          ) {
-
-            timeTableBreaksCounter++;
-
-            timeTableBreaksTr[timeTableBreaksCounter] = (
-              <TimetableBreakTd
-                currentBreak={timeTablebreakAtIndex}
-                style={{ width: tdWidthUnit }}
-                onCreate={onBreakcreate}
-                columnNumber={dayCount}
-                rowNumber={hoursStepsCounter}
-              />
-            );
-
-
-            prevDayBreak[matchingBreaksIndexe] = { prevDay: dayCount, breakComponentIndex: timeTableBreaksCounter }
-
-
-
-            // prevDayBreak.breakIndex = matchingBreaksIndexe;
-          }
-
-          if (prevBreakDayCount == prevDaycount) {
-
-            currentDayBreak.prevDay = dayCount;
-
-            const width =
-              timeTableBreaksTr[currentDayBreak.breakComponentIndex].props.style.width;
-            timeTableBreaksTr[currentDayBreak.breakComponentIndex].props.style.width =
-              parseInt(width) + tdWidth + "%";
-          }
-        }
-
-
-
-        if (mode == timetableMode.edit) {
-          console.log("borderWidth", borderWidth);
-          const borderStyle = `solid 0px black`;
-          const breakTdStyle = {
-            width: tdWidthUnit,
-            left: dayCount * tdWidth + "%",
-            top,
-            height,
-            border: borderStyle,
-            borderLeftWidth: borderWidth / 2 + "px",
-            borderRightWidth: borderWidth / 2 + "px",
-          };
-          let pushBreak = false;
-
-          if (
+            mode == timetableMode.read &&
             timeTablebreakAtIndex.only &&
             timeTablebreakAtIndex.only.includes(dayCount)
           ) {
-            pushBreak = true;
+            if (
+              prevDayBreak.breakIndex == null ||
+              prevDayBreak.breakIndex !== matchingBreaksIndexe
+            ) {
+              timeTableBreaksCounter++;
+
+              timeTableBreaksTr[timeTableBreaksCounter] = (
+                <TimetableBreakTd
+                  currentBreak={timeTablebreakAtIndex}
+                  style={{ width: tdWidthUnit }}
+                  onCreate={onBreakcreate}
+                  columnNumber={dayCount}
+                  rowNumber={hoursStepsCounter}
+                />
+              );
+              prevDayBreak.breakIndex = matchingBreaksIndexe;
+            }
+
+            if (prevDayBreak.breakIndex == matchingBreaksIndexe) {
+              const width =
+                timeTableBreaksTr[timeTableBreaksCounter].props.style.width;
+              timeTableBreaksTr[timeTableBreaksCounter].props.style.width =
+                parseInt(width) + tdWidth + "%";
+            }
           }
 
-          if (!timeTablebreakAtIndex.only) {
+          if (mode == timetableMode.edit) {
+            console.log("borderWidth", borderWidth);
+            const borderStyle = `solid 0px black`;
+            const breakTdStyle = {
+              width: tdWidthUnit,
+              left: dayCount * tdWidth + "%",
+              top,
+              height,
+              border: borderStyle,
+              borderLeftWidth: borderWidth / 2 + "px",
+              borderRightWidth: borderWidth / 2 + "px",
+            };
+            let pushBreak = false;
+            if (
+              isBreakRowFull == false &&
+              timeTablebreakAtIndex.only &&
+              timeTablebreakAtIndex.only.includes(dayCount)
+            ) {
+              pushBreak = true;
+            }
 
-            pushBreak = true;
+            if (isBreakRowFull == true) {
+              console.log("edit row fulll");
+              pushBreak = true;
+            }
+            if (pushBreak) {
+              timeTableBreaksTr.push(
+                <TimetableBreakTd
+                  key={breakKey}
+                  currentBreak={timeTablebreakAtIndex}
+                  style={breakTdStyle}
+                  onCreate={onBreakcreate}
+                  columnNumber={dayCount}
+                  rowNumber={hoursStepsCounter}
+                  mode={mode}
+                />
+              );
+            }
           }
 
-          if (pushBreak) {
-            timeTableBreaksTr.push(
-              <TimetableBreakTd
-                key={breakKey}
-                currentBreak={timeTablebreakAtIndex}
-                style={breakTdStyle}
-                onCreate={onBreakcreate}
-                columnNumber={dayCount}
-                rowNumber={hoursStepsCounter}
-                mode={mode}
-              />
-            );
-          }
+          matchingBreaksIndexe++;
         }
-
-        matchingBreaksIndexe++;
       }
+
 
 
       const dayStepStart = timetableStartDayjs
@@ -832,8 +709,7 @@ function Timetable(props) {
         .add(stepMinute, "minute")
 
       const daySeances = seancesByDayArr[dayCount] ?? [];
-
-
+      console.log('seances+++', dayStepStart.format('YYYY-MM-DD HH:mm:ss'), dayStepEnd.format('YYYY-MM-DD HH:mm:ss'));
 
       const findedseanceObjArr = daySeances.filter(function (seanceObj) {
         const { seance, index } = seanceObj;
@@ -846,73 +722,24 @@ function Timetable(props) {
 
       const currentLine = hoursStepsCounter + 1;
       if (findedseanceObjArr.length > 0) {
-
         const tdContainer = [];
-        console.log('new finded__')
         findedseanceObjArr.forEach((findedseanceObj, index) => {
 
           console.log('findedseanceObj++')
+          console.log(findedseanceObj)
           const { seance: findedSeance, index: findedSeanceIndex } =
             findedseanceObj;
-          rowSeanceStartArr.push(findedSeance.heure_debut)
-
-          const seanceEnd = dayjs(findedSeance.heure_fin);
-          const seanceStart = dayjs(findedSeance.heure_debut);
-          let tdTimeOverFlow = dayStepEnd.diff(seanceEnd, 'hours', true) / step;
-
-
-
-          const {
-            totalHour: seanceStartTotalHour,
-            timeStringMinute: seanceStartMinute,
-            timeStringHour: seanceStartHour,
-          } = convertTimeStringToHour();
-
-          const {
-            totalHour: seanceEndTotalHour,
-            timeStringMinute: seanceEndMinute,
-            timeStringHour: seanceEndHour,
-          } = convertTimeStringToHour(seanceEnd);
-
-          console.log('findedSeance+++', findedSeance, seanceStart.format("HH:mm"), seanceEnd.format("HH:mm"))
-          isSpecificTimeScale(
-            seanceStart.format("HH:mm"),
-
-          )
-
-          if (tdTimeOverFlow < 0) {
-            const seanceEndTimeString = seanceEnd.format("HH:mm");
-
-            if (!timeScaleOverflow.includes(seanceEndTimeString)) {
-              timeScaleOverflow.push(seanceEndTimeString)
-            }
-
-          } else {
-            isSpecificTimeScale(
-              seanceEnd.format("HH:mm"),
-
-            )
-
-          }
-
-
 
           const rowspan = findedSeance.duree_raw / step;
           const rowspanRounded = findedSeance.duree / step;
 
-
-          const isEndingAtBreak = timetableALLBreaks.findIndex((timetableBreak) => {
-
-
-            return timetableBreak.debut == seanceEnd.hour() + ':' + seanceEnd.minute()
-          }) !== -1;
-
-
+          // console.log('rowspannnnn________', rowspan, findedSeance)
+          // console.log('seance_end', currentLine + rowspan)
           let tdHeight;
 
           tdHeight = rowspan * rowHeight + "px";
-          // const seanceStart = dayjs(findedSeance.heure_debut);
-          // const seanceStartTotalHour = seanceStart.hour() + (seanceStart.minute() / 60)
+          const seanceStart = dayjs(findedSeance.heure_debut);
+          const seanceStartTotalHour = seanceStart.hour() + (seanceStart.minute() / 60)
           const tdTop = ((seanceStartTotalHour - hoursSteps) * rowHeight) / step + "px";
 
           const timeTableTdStyle = {
@@ -922,10 +749,9 @@ function Timetable(props) {
             maxWidth: (findedseanceObjArr.length > 1) ? null : tdWidthUnit,
             top: tdTop
           };
-          const timeTableKey = 'TimetableTd ' + index + key
 
           function onTdCreate(tdRef, props) {
-            const { hoursSteps, columnNumber, rowNumber, tdNumber, hasRunOnce, seance } =
+            const { hoursSteps, columnNumber, rowNumber, tdNumber, hasRunOnce } =
               props;
             console.log("______td created_______");
 
@@ -934,39 +760,21 @@ function Timetable(props) {
             if (hasRunOnce) {
               tdRef.style.height = timeTableTdStyle.height;
             }
-            // console.log('rowspan/step',)
-            // console.log('dayStepEnd', dayStepEnd.format("YYYY-MM-DD HH:mm:ss"), '____', findedSeance.heure_debut, '____', seanceEnd.format("YYYY-MM-DD HH:mm:ss"), dayStepEnd.diff(seanceEnd, 'hours', true) / step)
 
-
-            if (tdTimeOverFlow < 0 || (tdTimeOverFlow < 0 && isEndingAtBreak)) {
-              tdTimeOverFlow = Math.abs(tdTimeOverFlow);
-
-
-              let spanAmount = Math.floor(tdTimeOverFlow);
-
-
-              if (isEndingAtBreak) {
-                spanAmount = tdTimeOverFlow
+            if (rowspan > 1) {
+              const spanAmount = rowspanRounded - 1;
+              if (!tdRefsobj[rowNumber]) {
+                tdRefsobj[rowNumber] = [];
               }
-              if (spanAmount > 0) {
-                if (!tdRefsobj[rowNumber]) {
-                  tdRefsobj[rowNumber] = [];
-                }
 
-                tdRefsobj[rowNumber].push({ ref: tdRef, rowspan: spanAmount });
-              }
-              // const spanAmount = rowspanRounded - 1;
-
-
-
+              tdRefsobj[rowNumber].push({ ref: tdRef, rowspan: spanAmount });
             }
-
 
             const isOverflowingY = tdRef.scrollHeight > tdRef.clientHeight;
 
             if (prevRowNumber != rowNumber) {
               let oldTrRef = null;
-              console.log('tdRefsRow____', tdRefsRow, prevRowNumber, rowNumber)
+
               tdRefsRow.forEach((tdRef) => {
                 if (oldTrRef === null) {
                   oldTrRef = tdRef.closest(`.${classes.tr}`);
@@ -991,22 +799,6 @@ function Timetable(props) {
               prevRowNumber = rowNumber;
             }
 
-
-            // if(tdRefsRow.length==0){
-
-            //   tdRefsRow.push([{tdRef,seance}]);
-            // }else{
-            //   console.log(tdRefsRow)
-            //   tdRefsRow.find(tdRefsRowArr=>{
-            //   // console.log("🚀tdRefsRowArr+++ ", tdRefsRowArr)
-
-            //     tdRefsRowArr.find(tdRefObj=>{
-            //       const tdRefObjSeance=tdRefObj.seance
-            //       dayjs(seance.heure_debut).isBefore()
-            //       console.log('tdRefObjSeance',tdRefObjSeance)
-            //     })
-            //   })
-            // }
             tdRefsRow.push(tdRef);
 
             const trRef = tdRef.closest(`.${classes.tr}`);
@@ -1039,12 +831,11 @@ function Timetable(props) {
               modifiedTrsObj[rowNumber] = prevHeightDiff;
             }
           }
-
           tdCount++;
           if (findedseanceObjArr.length == 1) {
             timeTableTr.push(
               <TimetableTd
-                key={timeTableKey}
+                key={key}
                 seance={findedSeance}
                 style={timeTableTdStyle}
                 onCreate={onTdCreate}
@@ -1060,7 +851,7 @@ function Timetable(props) {
           } else {
             tdContainer.push(
               <TimetableTd
-                key={timeTableKey}
+                key={key}
                 seance={findedSeance}
                 style={timeTableTdStyle}
                 onCreate={onTdCreate}
@@ -1106,7 +897,7 @@ function Timetable(props) {
 
         if (tdContainer.length > 0) {
           const tdContainerStyle = { maxWidth: tdWidthUnit, minWidth: tdWidthUnit }
-          timeTableTr.push(<div key={'tdcontainer' + key} className={`${classes.td_container} tdcontainer`} style={tdContainerStyle}>
+          timeTableTr.push(<div className={`${classes.td_container} tdcontainer`} style={tdContainerStyle}>
             {tdContainer}
           </div>)
         }
@@ -1131,35 +922,21 @@ function Timetable(props) {
     if (currentSpecificTimeScale.length > 0) {
       currentSpecificTimeScale = currentSpecificTimeScale.map(
         (timeScale, index) => {
-          const { totalHour, timeStringHour: hours, timeStringMinute: minutes } = convertTimeStringToHour(timeScale)
-
-          let timeDiff = totalHour - hoursSteps;
-          /*
-            spanTop permet de placer l'heure au bon endroit
-            sur la ligne et fonction du step
-            si la différence entre l'heure a placer l'heure de début de ligne
-            correspond au step, cela signifie que que la hauteur entre les deux elements est égale a 100%.
-            Cette valeur doit être convertie px.
-          */
+          let timeDiff = timeScale.totalHour - hoursSteps;
           let spanTop = (timeDiff * 100) / step;
           const formatTime = dayjs()
-            .set("hour", hours)
-            .set("minute", minutes)
-            .set("second", 0)
-            .format("HH:mm");
-          if (rowSeanceStartArr.includes(formatTime)) {
+            .set("hour", timeScale.hours)
+            .set("minute", timeScale.minutes)
+            .set("second", 0);
 
-
-          }
-          // console.log('formatTime', formatTime.format("HH:mm"), timeScale)
           return (
             <span
               key={`specificTimescale_${index}`}
               className={`${classes.specificTimeScaleElemnt}`}
               style={{ top: spanTop + "%" }}
             >
-
-              {formatTime}
+              {" "}
+              {formatTime.format("HH:mm")}{" "}
             </span>
           );
         }
@@ -1179,16 +956,6 @@ function Timetable(props) {
       );
     }
 
-
-    const stepsMultiple = step * hoursStepsCounter
-
-
-    const isMultiple = (stepsMultiple >=
-      0 && Number.isInteger(stepsMultiple / timetableStepInHours))
-
-
-
-
     timeTableBody.push(
       <div
         className={`${classes.timetableRow} ${classes.tr}`}
@@ -1204,12 +971,10 @@ function Timetable(props) {
             minWidth: timeScaleWidthUnit,
           }}
         >
-
-          {isMultiple && <span className={`${classes.timeScaleElemnt}`}>
-
-            {formatTime.format("HH:mm")}
-          </span>}
-
+          <span className={`${classes.timeScaleElemnt}`}>
+            {" "}
+            {formatTime.format("HH:mm")}{" "}
+          </span>
           {currentSpecificTimeScale}
 
           {islastLoop && (

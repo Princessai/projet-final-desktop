@@ -38,8 +38,8 @@ export function AuthContextProvider({ children }) {
     const [isUserAuthenticated, setUserAuthenticated] = useState(false);
 
     console.log('auth context provider rerenderr');
-    console.log(user);
-    console.log(localStorage.getItem('token'));
+    // console.log(user);
+    // console.log(localStorage.getItem('token'));
 
 
 
@@ -72,7 +72,9 @@ export function AuthContextProvider({ children }) {
 
 
     }
+
     function reconnect(token, navigate) {
+
         setAxiosToken(token);
 
         axios.get('/logged_user/infos')
@@ -84,23 +86,17 @@ export function AuthContextProvider({ children }) {
 
                 initValues(year, userInfo, token);
 
-                const roleLabel = userInfo.role.label;
 
-
-                // const redirectedPath = RoleBasedRedirection[roleLabel];
-
-                // navigate(redirectedPath);
                 return response;
 
             });
-            
-        
+
+
     }
     function logout() {
 
-     return axios.get('/logout')
+        return axios.get('/logout')
             .then(function (response) {
-
                 localStorage.removeItem('token');
                 setAxiosToken(null);
 
