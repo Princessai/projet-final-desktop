@@ -27,36 +27,33 @@ function TimetableClassPage() {
     const interval = 0;
 
 
-    
-
-
     useEffect(function () {
         console.log('useffet', isUserAuthenticated)
         let controller;
         controller = new AbortController();
 
         if (isUserAuthenticated) {
-                console.log('fetch timetable');
-                axios.get(`/timetable/${classe_id}/${annee_id}/${interval}`, {
-                    signal: controller.signal
+            console.log('fetch timetable');
+            axios.get(`/timetable/${classe_id}/${annee_id}/${interval}`, {
+                signal: controller.signal
+            })
+                .then(function (response) {
+
+                    const timetables = response.data;
+
+                    setTimetables((oldvalue) => [...timetables]);
+                    setLoading(false);
+                    console.log(timetables);
+
                 })
-                    .then(function (response) {
-        
-                        const timetables = response.data;
-        
-                        setTimetables((oldvalue) => [...timetables]);
-                        setLoading(false);
-                        console.log(timetables);
-        
-                    })
-                    .catch(function (error) {
-                        // handle error
-                        console.log(error);
-                    });
-             
-        
+                .catch(function (error) {
+                    // handle error
+                    console.log(error);
+                });
+
+
         }
-        return ()=>{
+        return () => {
             controller.abort()
         }
 
@@ -69,6 +66,7 @@ function TimetableClassPage() {
 
     if (loading) return <FallbackContent />;
     console.log('timetables(((((', timetables)
+    
     const currentTimetable = timetables[0];
 
 
@@ -128,7 +126,8 @@ function TimetableClassPage() {
                             <div className='mx-5'>
                                 <h5 className='text-center fw-bold text-decoration-underline mb-5'> Timetable from {date_debut} to {date_fin}</h5>
 
-                                <Timetable TimetableData={currentTimetable} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
+                                <Timetable  seances={currentTimetable.seances}
+                                    breaks={currentTimetable.pauses} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
 
 
                             </div>

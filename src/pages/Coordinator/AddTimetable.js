@@ -11,6 +11,8 @@ import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
+import { MobileTimePicker, renderTimeViewClock, TimePicker } from '@mui/x-date-pickers';
+import { FormControl, InputLabel, MenuItem, Select } from '@mui/material';
 
 
 const theme = createTheme({
@@ -19,11 +21,12 @@ const theme = createTheme({
             styleOverrides: {
                 root: {
                     '& .MuiOutlinedInput-root': {
-                        fontSize: '12px', // Font size for the input
-                        height: '30px', // Input height
+                        fontSize: '15px', // Font size for the input
+                        // height: '40px', // Input height
                     },
                     '& .MuiInputLabel-root': {
-                        fontSize: '12px', // Label font size
+                        fontSize: '15px', // Label font size
+
                     },
                 },
             },
@@ -75,21 +78,7 @@ function onTdFocus(event, td, dayNumber) {
     const row = dataset.row;
     const column = dataset.col;
     console.log(dayNumber);
-    // let timetableStart = timetableProps.timetableStart;
 
-    // if (!timetableStart) return;
-
-    // timetableStart = dayjs(timetableStart)
-    //     .set('hours', 0)
-    //     .set('minutes', 0)
-    //     .add(column, 'day');
-
-    // const dayNumber = timetableStart.date();
-
-    // console.log('proooops start', timetableProps.timetableStart, 'dayNumber', dayNumber);
-    // console.log('dayname',getDay(column));
-
-    // dayjs().day().format('dddd');
 
 }
 
@@ -192,7 +181,8 @@ function AddTimetable() {
                                     </ThemeProvider>
                                 </div>
                                 <Timetable
-                                    TimetableData={{ seances: [], pauses: [] }}
+                                    seances={[]}
+                                    breaks={[]}
                                     timetableStart={timetableStart}
                                     timetableEnd={timetableEnd}
                                     onTdClick={onTdFocus}
@@ -208,7 +198,111 @@ function AddTimetable() {
 
                         </div>
                     </div>
-                    <div className={`${classes.addSidebar} h-100 bg-danger`}>
+                    <div className={`${classes.addSidebar} addSidebar d-flex flex-column justify-content-around h-100 bg-light shadow pt-3 px-3`}>
+                        <div>
+                            <h4>Sessions parameters</h4>
+                        </div>
+                        <ThemeProvider theme={theme}>
+                            <div className='dataPickerContainer w-100'>
+                                <DatePicker
+                                    key='to'
+                                    label="Date"
+                                    onError={(error) => {
+                                        console.log('errorrr', error);
+                                    }}
+                                    minDate={derivedMinDate(timetableStart, weekStart)}
+
+                                />
+                            </div>
+
+                            <div className='timePicker-container'>
+                                <TimePicker
+                                    label="Start hour"
+                                    viewRenderers={{
+                                        hours: renderTimeViewClock,
+                                        minutes: renderTimeViewClock,
+                                        seconds: renderTimeViewClock,
+                                    }}
+                                />
+                            </div>
+
+                            <div className='timePicker-container'>
+                                <TimePicker
+                                    label="End hour"
+                                    viewRenderers={{
+                                        hours: renderTimeViewClock,
+                                        minutes: renderTimeViewClock,
+                                        seconds: renderTimeViewClock,
+                                    }}
+                                />
+                            </div>
+
+                            <div>
+                                <FormControl sx={{ width: '100%' }} size='small'>
+                                    <InputLabel id="demo-simple-select-label">Module</InputLabel>
+                                    <Select
+                                        id="demo-simple-select"
+                                        labelId="demo-simple-select-label"
+                                        label="Module"
+                                    // value={age}
+                                    // onChange={handleChange}
+                                    >
+                                        <MenuItem value={10}>Ten</MenuItem>
+                                        <MenuItem value={20}>Twenty</MenuItem>
+                                        <MenuItem value={30}>Thirty</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </div>
+                            <div>
+                                <FormControl sx={{ width: '100%' }} size="small">
+                                    <InputLabel id="demo-simple-select-label">Session type</InputLabel>
+                                    <Select
+                                        id="demo-simple-select"
+                                        labelId="demo-simple-select-label"
+                                        label="Session type"
+                                    // value={age}
+                                    // onChange={handleChange}
+                                    >
+                                        <MenuItem value={10}>Ten</MenuItem>
+                                        <MenuItem value={20}>Twenty</MenuItem>
+                                        <MenuItem value={30}>Thirty</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </div>
+                            <div>
+                                <FormControl sx={{ width: '100%' }} size="small" >
+                                    <InputLabel id="demo-simple-select-label">Class</InputLabel>
+                                    <Select
+                                        id="demo-simple-select"
+                                        labelId="demo-simple-select-label"
+                                        label="Class"
+                                    // value={age}
+                                    // onChange={handleChange}
+                                    >
+                                        <MenuItem value={10}>Ten</MenuItem>
+                                        <MenuItem value={20}>Twenty</MenuItem>
+                                        <MenuItem value={30}>Thirty</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </div>
+                            <div>
+                                <FormControl sx={{ width: '100%' }} size="small">
+                                    <InputLabel id="demo-simple-select-label">Room</InputLabel>
+                                    <Select
+                                        id="demo-simple-select"
+                                        labelId="demo-simple-select-label"
+                                        label="Room"
+                                    // value={age}
+                                    // onChange={handleChange}
+                                    >
+                                        <MenuItem value={10}>Ten</MenuItem>
+                                        <MenuItem value={20}>Twenty</MenuItem>
+                                        <MenuItem value={30}>Thirty</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </div>
+
+                        </ThemeProvider>
 
                     </div>
 

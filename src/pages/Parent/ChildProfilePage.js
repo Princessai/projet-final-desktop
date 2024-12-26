@@ -1,31 +1,85 @@
-import React from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import Navbar from '../../components/Navbar'
 import Profile from '../../components/Profile'
 import Footer from '../../components/Footer'
 import SideBarParent from '../../components/SideBarParent'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
+import { useAxios } from '../../Providers/AxiosProvider'
+import { FallbackContent } from '../../components/FallbackContent'
 
 function ChildProfilePage() {
+  console.log('ChildProfilePage____')
 
-    const {state} = useLocation();
-    
-    // const child = location.state;
-    const child = state.child;
+  const { state } = useLocation();
+  console.log("🚀 ~ ChildProfilePage ~ state:", state)
 
-    console.log("🚀 ~ StudentProfil ~ state:", state)
-
-    return (
-        <div className='div-container d-flex flex-column'>
-            <Navbar />
-            <div className='body-content-container d-flex'>
-                <SideBarParent />
-                <section className='content-container'>
-                    <div className="row">
-
-                        <Profile student= {child}/>
+  const { user_id } = useParams();
 
 
-                        {/* <div className="col-md-12 d-flex  mb-5 mt-3 ms-5">
+  const [loading, setLoading] = useState(() => {
+    return state == null;
+  });  // État de chargement
+  console.log("🚀 ~ =useState ~ loading:", loading)
+
+  const { axios } = useAxios();
+
+  const child = useRef(null);
+
+  if (state) {
+    child.current = state.child;
+
+  }
+
+  useEffect(() => {
+    let controller;
+    controller = new AbortController();
+
+    if (!state) {
+      axios.get(`/user/${user_id}`, {
+        signal: controller.signal
+      })
+        .then((response) => {
+          child.current = response.data;
+          console.log("🚀 ~ .then ~ child:", child.current)
+          setLoading(false);
+        })
+
+    }
+
+    return () => {
+      controller.abort()
+    }
+
+
+  }, [])
+
+
+  if (loading) {
+    return <FallbackContent />
+  }
+
+  // const child = location.state;
+
+
+
+  // const child = JSON.parse(localStorage.getItem("child"));
+
+  // console.log("🚀 ~ StudentProfil ~ state:", state)
+
+  console.log('chillllllddd', child.current);
+
+  return (
+    <div className='div-container d-flex flex-column'>
+      <Navbar />
+      <div className='body-content-container d-flex'>
+        <SideBarParent />
+        <section className='content-container'>
+          <div className="row">
+
+            <Profile student={child.current} />
+
+
+            {/* <div className="col-md-12 d-flex  mb-5 mt-3 ms-5">
               <img src="..." className="rounded-circle me-5" alt="..." />
               <h2>
                 NATHAN FOLLIN
@@ -71,14 +125,14 @@ function ChildProfilePage() {
 
 
             </div> */}
-                    </div>
+          </div>
 
-                </section>
-            </div>
+        </section>
+      </div>
 
-            <Footer />
-        </div>
-    )
+      <Footer />
+    </div>
+  )
 }
 
 export default ChildProfilePage

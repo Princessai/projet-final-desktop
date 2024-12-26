@@ -5,151 +5,464 @@ import { useAxios } from '../Providers/AxiosProvider';
 import { FallbackContent } from './FallbackContent';
 import dayjs from 'dayjs';
 import { useAuth } from '../Providers/AuthProvider';
+import BarChart from './BarChart';
+import PieOrDoughnutChart from './PieOrDoughnutChart';
 
+
+function Absences({ absences, message, user }) {
+    return (
+        <div>
+
+            <div>
+                {absences ?
+                    <table className="table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Date</th>
+                                <th scope="col">Hour</th>
+                                <th scope="col">Session Type</th>
+                                <th scope="col">Module</th>
+
+                            </tr>
+                        </thead>
+                        <tbody>
+
+                            {absences.map((absence, index) => {
+                                let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
+                                let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
+                                let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
+
+                                return <tr key={index} className='border-bottom mb-3' >
+                                    <td>{date}</td>
+                                    <td> {heure_debut} - {heure_fin}</td>
+                                    <td> {absence.type_seance}</td>
+                                    <td>{absence.module}</td>
+
+
+                                    {user.role.label == 'coordinator' &&
+
+                                        <button className='btn btn-success mx-3 mb-3'>Justify</button>
+
+                                    }
+
+
+                                </tr>
+
+
+                            })
+                            }
+                        </tbody>
+
+                    </table> :
+                    <p className='fw-bold border-0 text-center text-black-50 fst-italic'>{message}</p>
+
+                }
+
+            </div>
+
+        </div>
+    )
+}
 
 function Profile({ student }) {
 
-    const { user } = useAuth();
-    console.log('profile rerender')
-    console.log("🚀 ~ Profile ~ user:", user)
-    
 
-    const [absences, setAbsences] = useState();
+    const { user, currentYear, isUserAuthenticated } = useAuth();
+    const annee_id = currentYear.id;
+
+    const [selectedView, setSelectedView] = useState("absences");
+
+    const [selectedChart, setSelectedChart] = useState("weeks");
+
+
+
+    // const [absences, setAbsences] = useState();
+
+    // const [attendancesByWeeks, setAttendancesByWeeks] = useState();
+    // const [attendanceRate, setAttendanceRate] = useState();
+
+
+    /* Cette syntaxe me permet d'initialiser plusieurs en une fois */
+    const [studentData, setStudentData] = useState({
+        absences: null,
+        attendancesByWeeks: null,
+        attendanceRate: null,
+        attendancesByModules: null,
+    });
+
 
     const { axios } = useAxios();
 
 
     const [loading, setLoading] = useState(true);  // État de chargement
 
-    function fetchStudentsAbsences() {
-       
+    // function fetchStudentsAbsences() {
 
-        axios.get(`/list/absences/student/${student.id}`)
-            .then(function (response) {
 
-                const absences = response.data;
+    //     axios.get(`/list/absences/student/${student.id}`)
+    //         .then(function (response) {
 
-                console.log("student's absences", absences);
-                setAbsences((oldvalue) => [absences]);
+    //             const absences = response.data;
+
+    //             console.log("student's absences", absences);
+    //             setAbsences((oldvalue) => [absences]);
+    //             setLoading(false);
+
+    //         })
+    //         .catch(function (error) {
+    //             // handle error
+    //             console.log(error);
+    //         });
+
+    // }
+
+    // function fetchStudentsAttendancesByWeeks() {
+
+    //     axios.get(`/presence/student/weeks/${student.id}/${annee_id}`)
+    //         .then(function (response) {
+
+    //             const attendancesByWeeks = response.data;
+
+    //             console.log("student's attendancesByWeeks", attendancesByWeeks);
+    //             setAttendancesByWeeks((oldvalue) => [...attendancesByWeeks]);
+    //             setLoading(false);
+
+    //         })
+    //         .catch(function (error) {
+    //             // handle error
+    //             console.log(error);
+    //         });
+
+    // }
+
+    // function fetchStudentsAttendanceRate() {
+
+    //     axios.get(`/presence/student/${student.id}`)
+    //         .then(function (response) {
+
+    //             const attendanceRate = response.data;
+
+    //             console.log("student's attendanceRate", attendanceRate);
+    //             setAttendanceRate((oldvalue) => [attendanceRate]);
+    //             setLoading(false);
+
+    //         })
+    //         .catch(function (error) {
+    //             // handle error
+    //             console.log(error);
+    //         });
+
+    // }
+
+
+    function fetchData() {
+        /*
+         la méthode "Promise.all()" permet (en gros) de lancer plusieurs requêtes a la fois.
+         Elle prend en un élément itérable comme entrée 
+         et renvoie une seule instance de promesse.
+        */
+        Promise.all([
+            axios.get(`/list/absences/student/${student.id}`),
+            axios.get(`/presence/student/weeks/${student.id}/${annee_id}`),
+            axios.get(`/presence/student/${student.id}`),
+            axios.get(`/presence/student/modules/${student.id}/${annee_id}`),
+        ])
+            .then(([absencesRes, attendancesByWeeksRes, attendanceRateRes, attendancesByModulesRes]) => {
+                setStudentData({
+                    absences: absencesRes.data,
+                    attendancesByWeeks: attendancesByWeeksRes.data,
+                    attendanceRate: attendanceRateRes.data,
+                    attendancesByModules: attendancesByModulesRes.data,
+                });
                 setLoading(false);
-
             })
-            .catch(function (error) {
-                // handle error
-                console.log(error);
+            .catch(error => {
+                console.error("Error fetching data:", error);
+                setLoading(false);
             });
-
     }
 
     useEffect(function () {
 
-        fetchStudentsAbsences();
+        // fetchStudentsAbsences();
+        // fetchStudentsAttendancesByWeeks();
+        // fetchStudentsAttendanceRate()
+
+        if (isUserAuthenticated) {
+            fetchData();
+        }
 
 
-    }, [])
+    }, [isUserAuthenticated]);
 
-    // console.log("student's absences after useeffect", absences);
+    let absences = studentData.absences;
+    let attendancesByWeeks = studentData.attendancesByWeeks;
+    let attendancesByModules = studentData.attendancesByModules;
+    let attendanceRate = studentData.attendanceRate;
 
 
-    // console.log('student', student);
+    console.log("student's attendanceRate after useeffect", attendanceRate);
+    console.log("🚀 ~ Profile ~ absences:", absences)
+    console.log("🚀 ~ attendancesByWeeks:", attendancesByWeeks)
+    console.log("🚀 ~ Profile ~ attendancesByModules:", attendancesByModules)
 
-    if (loading) return <FallbackContent />;
 
+    /*
+    La syntaxe "?" vérifie si l'élément existe dans le cas contraire renvoie "undefind".
+    Dans mon cas il renvoie un tableau vide
+    */
+
+    const datasetsDataByWeeks = attendancesByWeeks?.map(attendance => attendance.attendanceRate) || [];
+
+    const dataLabelByWeeks = attendancesByWeeks?.map(attendance => {
+        const start = dayjs(attendance.date_debut).format("DD/MM/YYYY");
+        const end = dayjs(attendance.date_fin).format("DD/MM/YYYY");
+        return `${start}-${end}`;
+    }) || [];
+
+
+    let datasetsDataByModules = [];
+    let dataLabelByModules = [];
+
+    attendancesByModules?.map(attendance => {
+        datasetsDataByModules.push(attendance.attendanceRate);
+        dataLabelByModules.push(attendance.label);
+    });
+
+   const datasetsBgColor = datasetsDataByModules.map((value) => {
+        if (value >= 70) return '#00B050';
+        if (value >= 50.1) return '#92D050';
+        if (value >= 30.1) return '#FFC000';
+        return '#E30F41';
+    });
+
+
+    let datasetsDataAttendance = [];
+    const dataLabelAttendance = ['Attendance rate', 'Absence rate'];
+
+    if (attendanceRate && attendanceRate.length !== 0) {
+
+        let absenceRate = 100 - attendanceRate.attendanceRate;
+
+        datasetsDataAttendance.push(attendanceRate.attendanceRate);
+        datasetsDataAttendance.push(absenceRate);
+
+    }
+
+   let chartTitle = selectedChart == "weeks" ? 'Attendance rate per weeks (%)' : 'Year-to-date attendance rate per modules (%)';
+
+
+    if (loading || !attendanceRate || !attendancesByWeeks) {
+        return <FallbackContent />;
+    }
     return (
         <>
-            <div className={`header-container ${style['header-container']} col-md-12 d-flex mb-5 mt-3 ms-3`}>
-                <div className={`picture-container ${style['picture-container']} me-3`}>
-                    <img src={student.picture} className={`picture ${style.picture}`} alt="..." />
+            <div className='d-flex justify-content-between align-items-center'>
+                <div className={`header-container ${style['header-container']} d-flex mb-5 mt-3 ms-3`}>
+                    <div className={`picture-container ${style['picture-container']} me-3`}>
+                        <img src={student.picture} className={`picture ${style.picture}`} alt="..." />
+                    </div>
+                    <div>
+                        <h2>
+                            {student.name} {student.lastname}
+                        </h2>
+                        <p><span className='fw-bold'>Email: </span>{student.email}</p>
+                        <p><span className='fw-bold'>Phone: </span>{student.phone_number}</p>
+                        <p><span className='fw-bold'>Class: </span>{student.classe[0].label}</p>
+
+                    </div>
                 </div>
-                <div>
-                    <h2>
-                        {student.name} {student.lastname}
-                    </h2>
-                    <p><span className='fw-bold'>Email: </span>{student.email}</p>
-                    <p><span className='fw-bold'>Phone: </span>{student.phone_number}</p>
-                    <p><span className='fw-bold'>Class: </span>{student.classe[0].label}</p>
+
+                <div className='chart-container w-100 d-flex justify-content-center align-items-center'>
+                    <PieOrDoughnutChart
+                    data={attendanceRate}
+                        dataLabel={dataLabelAttendance}
+                        datasetsData={datasetsDataAttendance}
+                        chartTitle='Overall attendance rate (%)'
+                        legendPosition='bottom'
+
+                    />
 
                 </div>
+
             </div>
+
+            {/* buttons selected view */}
             <div className="col-md-12 d-flex ps-5">
-                <button type="button" className="btn btn-secondary me-5">Missing</button>
-                <Link to={''}>
-                    <button type="button" className="btn btn-secondary">Presence</button>
-                </Link>
+                <button
+                    type="button"
+                    className={`btn btn-secondary me-5 ${selectedView === "absences" && "active"}`}
+                    onClick={() => setSelectedView("absences")}>
+                    Absences
+                </button>
+                <button
+                    type="button"
+                    className={`btn btn-secondary ${selectedView === "attendance" && "active"}`}
+                    onClick={() => setSelectedView("attendance")}>
+                    Attendance rate
+                </button>
 
             </div>
+
+
             <div className="col-md-12">
 
+                {selectedView === 'absences' &&
+                    <div className="accordion mt-5 mb-5" id="accordionPanelsStayOpenExample ">
+                        <div className="accordion-item w-75 m-auto">
+                            <h2 className="accordion-header">
+                                <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
+                                    <strong className="m-auto ">Justified absences</strong>
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseOne" className="accordion-collapse collapse show">
+                                <div className="accordion-body">
 
-                <div className="accordion " id="accordionPanelsStayOpenExample ">
-                    <div className="accordion-item w-75 m-auto mt-5">
-                        <h2 className="accordion-header">
-                            <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
-                                <strong className="m-auto ">Justified absences</strong>
-                            </button>
-                        </h2>
-                        <div id="panelsStayOpen-collapseOne" className="accordion-collapse collapse show">
-                            <div className="accordion-body">
-                                {absences[0] &&
-                                    absences[0].justified.map((absence, index) => {
-                                        let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-                                        let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-                                        let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
+                                    {/* {absences[0].justified ? <table className="table">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Date</th>
+                                            <th scope="col">Hour</th>
+                                            <th scope="col">Session Type</th>
+                                            <th scope="col">Module</th>
 
-                                        // let
-                                        return <div key={index} className='d-flex justify-content-around border-bottom mb-3' >
-                                            <p className='fw-bold'>{date}</p>
-                                            <p> {heure_debut} - {heure_fin}</p>
-                                            <p> {absence.type_seance}</p>
-                                            <p>{absence.module}</p>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
-                                        </div>
+                                        {
+                                            absences[0].justified.map((absence, index) => {
+                                                let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
+                                                let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
+                                                let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
 
-                                    })
-                                }
+                                                // let
+                                                return <tr key={index} className='border-bottom mb-3' >
+                                                    <td className='fw-bold'>{date}</td>
+                                                    <td> {heure_debut} - {heure_fin}</td>
+                                                    <td> {absence.type_seance}</td>
+                                                    <td>{absence.module}</td>
 
+                                                </tr>
+
+                                            })
+                                        }
+                                    </tbody>
+
+                                </table> :
+                                    <p className='fw-bold border-0 text-center text-black-50 fst-italic'>No justified absences.</p>
+
+                                } */}
+
+                                    <Absences absences={absences.justified} message="No justified absences." user={user} />
+
+
+
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div className="accordion-item w-75 m-auto mb-5">
-                        <h2 className="accordion-header ">
-                            <button className="accordion-button collapsed " type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
-                                <strong className="m-auto"> Unjustified absences</strong>
-                            </button>
-                        </h2>
-                        <div id="panelsStayOpen-collapseTwo" className="accordion-collapse collapse">
-                            <div className="accordion-body">
-                                {absences[0] &&
-                                    absences[0].notjustified.map((absence, index) => {
-                                        let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-                                        let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-                                        let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
+                        <div className="accordion-item w-75 m-auto">
+                            <h2 className="accordion-header ">
+                                <button className="accordion-button collapsed " type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
+                                    <strong className="m-auto"> Unjustified absences</strong>
+                                </button>
+                            </h2>
+                            <div id="panelsStayOpen-collapseTwo" className="accordion-collapse collapse">
+                                <div className="accordion-body">
+                                    {/* {absences[0].notjustified ?
+                                    <table className="table">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col">Date</th>
+                                                <th scope="col">Hour</th>
+                                                <th scope="col">Session Type</th>
+                                                <th scope="col">Module</th>
 
-                                        return <div key={index} className='d-flex justify-content-around align-items-center border-bottom mb-3' >
-                                            <p className='fw-bold'>{date}</p>
-                                            <p>{heure_debut} - {heure_fin}</p>
-                                            <p>{absence.type_seance}</p>
-                                            <p>{absence.module}</p>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
 
                                             {
-                                                <div>
-                                                    <button className='btn btn-success mx-3 mb-3'>Justify</button>
-                                                </div>
+                                                absences[0].notjustified.map((absence, index) => {
+                                                    let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
+                                                    let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
+                                                    let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
+
+                                                    return <tr key={index} className='border-bottom mb-3' >
+                                                        <td>{date}</td>
+                                                        <td> {heure_debut} - {heure_fin}</td>
+                                                        <td> {absence.type_seance}</td>
+                                                        <td>{absence.module}</td>
+
+
+                                                        {user.role.label == 'coordinator' &&
+
+                                                            <button className='btn btn-success mx-3 mb-3'>Justify</button>
+
+                                                        }
+
+
+                                                    </tr>
+
+
+                                                })
                                             }
+                                        </tbody>
 
+                                    </table> :
+                                    <p className='fw-bold border-0 text-center text-black-50 fst-italic'>No absences.</p>
 
-                                        </div>
+                                } */}
 
+                                    <Absences absences={absences.notjustified} message="No absences." user={user} />
 
-                                    })
-                                }
-
+                                </div>
                             </div>
                         </div>
+
+                    </div>}
+
+                {selectedView === 'attendance' &&
+
+                    <div className='my-5 mx-5'>
+                        <div className='mb-3' style={{
+                            width: '30%',
+                        }}>
+                            <select
+                                className="form-select"
+                                aria-label="Default select example"
+                                value={selectedChart}
+                                onChange={(e) => setSelectedChart(e.target.value)}
+                            >
+                                <option value="weeks">Per weeks</option>
+                                <option value="modules">Per modules</option>
+                            </select>
+                        </div>
+
+                        <div className='chart-container d-flex justify-content-center align-items-center'>
+
+                            <BarChart
+                                dataLabel={selectedChart == "weeks" ? dataLabelByWeeks : dataLabelByModules}
+                                datasetsLabel='Attendance rate'
+                                datasetsBgColor={datasetsBgColor}
+                                datasetsData={selectedChart == "weeks" ? datasetsDataByWeeks : datasetsDataByModules}
+                                chartTitle={chartTitle}
+                                legendPosition='bottom'
+                                isAttendance={true}
+                            />
+
+                            {/* {selectedChart == "modules" && <BarChart
+                                dataLabel={dataLabelByModules}
+                                datasetsLabel='Attendance rate'
+                                datasetsData={datasetsDataByModules}
+                                chartTitle='Attendance rate per weeks (%)'
+                                legendPosition='bottom'
+                                isAttendance={true}
+                            />} */}
+                        </div>
+
                     </div>
-
-                </div>
-
+                }
 
             </div>
 
@@ -158,196 +471,3 @@ function Profile({ student }) {
 }
 
 export default Profile
-
-// function UserClassProfilMissing() {
-
-//     const { student_id } = useParams();
-
-//     const [studentsInfos, setStudentsInfos] = useState([]);
-
-//     const [absences, setAbsences] = useState([]);
-
-//     const { axios } = useAxios();
-
-
-//     const [loading, setLoading] = useState(true);  // État de chargement
-
-
-//     function fetchStudentsInfos() {
-//         console.log('fetch student Infos');
-//         axios.get(`/student/${student_id}`)
-//             .then(function (response) {
-
-//                 const studentsInfos = response.data;
-
-//                 setStudentsInfos((oldvalue) => [studentsInfos]);
-//                 setLoading(false);
-//                 console.log(studentsInfos);
-
-//             })
-//             .catch(function (error) {
-//                 // handle error
-//                 console.log(error);
-//             });
-
-//     }
-
-//     function fetchStudentsAbsences() {
-//         console.log('fetch student Absences');
-
-//         axios.get(`/list/absences/student/${student_id}`)
-//             .then(function (response) {
-
-//                 const absences = response.data;
-
-//                 setAbsences((oldvalue) => [absences]);
-//                 setLoading(false);
-//                 console.log("student's absences", absences);
-
-//             })
-//             .catch(function (error) {
-//                 // handle error
-//                 console.log(error);
-//             });
-
-//     }
-
-//     useEffect(function () {
-
-//         fetchStudentsInfos();
-//         fetchStudentsAbsences();
-
-
-//     }, [])
-
-//     console.log("student's absences after useeffect", absences);
-
-//     // if (absences[0]) {
-
-//     //   let justifiedAbsences = absences[0].justified;
-//     //   console.log('justifiedAbsences', justifiedAbsences);
-
-//     //   let heure_debut = justifiedAbsences[0].seance_heure_debut.split(' ');
-//     //   console.log('heure_debut', heure_debut)
-
-//     //   let unJustifiedAbsences = absences[0].notjustified;
-//     //   console.log('unJustifiedAbsences', unJustifiedAbsences);
-
-//     // }
-//     // let justifiedAbsences = absences[0].justified;
-//     //     console.log('justifiedAbsences', justifiedAbsences);
-
-//     // let unJustifiedAbsences = absences[0];
-//     //     console.log('unJustifiedAbsences', unJustifiedAbsences);
-
-
-//     if (loading) return <FallbackContent />;
-
-
-//     if (absences[0])
-//         return (
-//             <div className='div-container d-flex flex-column'>
-//                 <Navbar />
-//                 <div className='body-content-container d-flex'>
-//                     <SidebarCoordinator />
-//                     <section className='content-container'>
-//                         <div className="">
-//                             <div className="col-md-12 mb-5 mt-3 ms-5">
-//                                 <div className='d-flex my-5'>
-//                                     <img src="..." className="rounded-circle me-5" alt="..." />
-//                                     <h2>
-//                                         {studentsInfos[0].name} {studentsInfos[0].lastname}
-//                                     </h2>
-//                                 </div>
-//                                 <p> <span className='fw-bold'>Email:</span> {studentsInfos[0].email}</p>
-//                                 <p> <span className='fw-bold'>Phone number:</span> {studentsInfos[0].phone_number}</p>
-//                                 <p> <span className='fw-bold'>Class:</span> {studentsInfos[0].classe[0].label}</p>
-
-//                             </div>
-//                             <div className="col-md-12 d-flex ps-5">
-//                                 <button type="button" className="btn btn-secondary me-5">Missing</button>
-//                                 <Link to={'/coordinator/userClass/profil/presence'}>
-//                                     <button type="button" className="btn btn-secondary">Presence</button>
-//                                 </Link>
-
-//                             </div>
-//                             <div className="col-md-10 accordion-container">
-
-//                                 <div className="accordion m-3 mt-5" id="accordionPanelsStayOpenExample ">
-//                                     <div className="accordion-item mb-3">
-//                                         <h2 className="accordion-header">
-//                                             <button className="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseOne" aria-expanded="true" aria-controls="panelsStayOpen-collapseOne">
-//                                                 <strong className="m-auto ">Justified absences</strong>
-//                                             </button>
-//                                         </h2>
-//                                         <div id="panelsStayOpen-collapseOne" className="accordion-collapse collapse show">
-//                                             <div className="accordion-body">
-//                                                 {
-//                                                     absences[0].justified.map((absence, index) => {
-//                                                         let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-//                                                         let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-//                                                         let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
-
-//                                                         // let
-//                                                         return <div key={index} className='d-flex justify-content-around border-bottom mb-3' >
-//                                                             <p className='fw-bold'>{date}</p>
-//                                                             <p> {heure_debut} - {heure_fin}</p>
-//                                                             <p> {absence.type_seance}</p>
-//                                                             <p>{absence.module}</p>
-
-//                                                         </div>
-
-//                                                     })
-//                                                 }
-
-//                                             </div>
-//                                         </div>
-//                                     </div>
-//                                     <div className="accordion-item border-top">
-//                                         <h2 className="accordion-header ">
-//                                             <button className="accordion-button collapsed " type="button" data-bs-toggle="collapse" data-bs-target="#panelsStayOpen-collapseTwo" aria-expanded="false" aria-controls="panelsStayOpen-collapseTwo">
-//                                                 <strong className="m-auto"> Unjustified absences</strong>
-//                                             </button>
-//                                         </h2>
-//                                         <div id="panelsStayOpen-collapseTwo" className="accordion-collapse collapse">
-//                                             <div className="accordion-body">
-//                                                 {
-//                                                     absences[0].notjustified.map((absence, index) => {
-//                                                         let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-//                                                         let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-//                                                         let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
-
-//                                                         return <div key={index} className='d-flex justify-content-around align-items-center border-bottom mb-3' >
-//                                                             <p className='fw-bold'>{date}</p>
-//                                                             <p>{heure_debut} - {heure_fin}</p>
-//                                                             <p>{absence.type_seance}</p>
-//                                                             <p>{absence.module}</p>
-
-//                                                             <div>
-//                                                                 <button className='btn btn-success mx-3 mb-3'>Justify</button>
-//                                                             </div>
-
-//                                                         </div>
-
-
-//                                                     })
-//                                                 }
-
-//                                             </div>
-//                                         </div>
-//                                     </div>
-
-//                                 </div>
-
-
-//                             </div>
-//                         </div>
-
-//                     </section>
-//                 </div>
-
-//                 <Footer />
-//             </div>
-
-//         )
-// }

@@ -6,6 +6,7 @@ import { useAxios } from '../../Providers/AxiosProvider';
 import { FallbackContent } from '../../components/FallbackContent';
 import style from './ParentChoicePage.module.css';
 import { Link } from 'react-router-dom';
+import { useChild } from '../../Providers/ChildProvider';
 
 
 function ParentChoicePage() {
@@ -19,6 +20,8 @@ function ParentChoicePage() {
   const [parentsChildren, setParentsChildren] = useState([]);  // État de chargement
   const [loading, setLoading] = useState(true);  // État de chargement
   const { axios } = useAxios();
+
+  const { setSelectedChild } = useChild();
 
 
   function fetchParentsChildren() {
@@ -57,7 +60,6 @@ function ParentChoicePage() {
 
 
 
-
   return (
     <div className='div-container d-flex flex-column'>
       <Navbar />
@@ -71,10 +73,9 @@ function ParentChoicePage() {
 
               {parentsChildren.map((child, index) => {
                 return <div key={index} className="card w-25 shadow p-3 m-3 rounded" >
-                  <Link to={{
-                    pathname: '/child/profil', state: { child }
-                  }}
+                  <Link to={ `/parent/child/profil/${child.id}`}
                   state= {{child}}
+                  onClick={() => setSelectedChild(child)}
                   >
 
                     <div className={`card-img-top-container ${style['card-img-top-container']}`}>
