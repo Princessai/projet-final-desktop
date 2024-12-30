@@ -11,41 +11,20 @@ function GraphicClass() {
       <div className='body-content-container d-flex'>
         <SidebarCoordinator />
         <section className='content-container'>
-          <div class="row">
-            <div class="col-md-12  mb-4 mt-3 ms-5">
-              <h1 class='py-3'>GRAPHIC</h1>
+          <div className="row">
+            <div className="col-md-12  mb-4 mt-3 ms-5">
+              <h1 className='py-3'>GRAPHIC</h1>
             </div>
-            <div class="col-md-12 mb-4 d-flex">
-              <button type="button" class="btn btn-secondary ms-4 me-4">All Class</button>
-              <Link to={'/coordinator/graphic/class'}>
-                <button type="button" class="btn btn-secondary">Class</button>
-              </Link>
+            <div className="col-md-12 mb-4 d-flex">
+              <button type="button" className="btn btn-secondary ms-4 me-4">All Class</button>
+                <button type="button" className="btn btn-secondary">Class</button>
             </div>
 
 
 
 
-            <div class="col-md-12 d-flex flex-wrap">
+            <div className="col-md-12 d-flex flex-wrap">
 
-
-              <div class="card shadow w-25 m-3" >
-                <img src="..." class="card-img-top" alt="..." />
-                <Link to={'/coordinator/graphic/class/details'}>
-                  <div class="card-body">
-                    <p class="card-text"><strong>B3 DEV</strong> </p>
-                  </div>
-                </Link>
-              </div>
-
-
-              <div class="card shadow w-25 m-3" >
-                <img src="..." class="card-img-top" alt="..." />
-                <Link to={'/coordinator/graphic/class/details'}>
-                  <div class="card-body">
-                    <p class="card-text"><strong>B3 DEV</strong> </p>
-                  </div>
-                </Link>
-              </div>
 
 
             </div>

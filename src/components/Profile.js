@@ -318,42 +318,6 @@ function Profile({ student }) {
                             <div id="panelsStayOpen-collapseOne" className="accordion-collapse collapse show">
                                 <div className="accordion-body">
 
-                                    {/* {absences[0].justified ? <table className="table">
-                                    <thead>
-                                        <tr>
-                                            <th scope="col">Date</th>
-                                            <th scope="col">Hour</th>
-                                            <th scope="col">Session Type</th>
-                                            <th scope="col">Module</th>
-
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-
-                                        {
-                                            absences[0].justified.map((absence, index) => {
-                                                let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-                                                let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-                                                let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
-
-                                                // let
-                                                return <tr key={index} className='border-bottom mb-3' >
-                                                    <td className='fw-bold'>{date}</td>
-                                                    <td> {heure_debut} - {heure_fin}</td>
-                                                    <td> {absence.type_seance}</td>
-                                                    <td>{absence.module}</td>
-
-                                                </tr>
-
-                                            })
-                                        }
-                                    </tbody>
-
-                                </table> :
-                                    <p className='fw-bold border-0 text-center text-black-50 fst-italic'>No justified absences.</p>
-
-                                } */}
-
                                     <Absences absences={absences.justified} message="No justified absences." user={user} />
 
 
@@ -369,50 +333,6 @@ function Profile({ student }) {
                             </h2>
                             <div id="panelsStayOpen-collapseTwo" className="accordion-collapse collapse">
                                 <div className="accordion-body">
-                                    {/* {absences[0].notjustified ?
-                                    <table className="table">
-                                        <thead>
-                                            <tr>
-                                                <th scope="col">Date</th>
-                                                <th scope="col">Hour</th>
-                                                <th scope="col">Session Type</th>
-                                                <th scope="col">Module</th>
-
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-
-                                            {
-                                                absences[0].notjustified.map((absence, index) => {
-                                                    let heure_debut = dayjs(absence.seance_heure_debut).format('HH:mm');
-                                                    let heure_fin = dayjs(absence.seance_heure_fin).format('HH:mm');
-                                                    let date = dayjs(absence.seance_heure_fin).format('MMMM D, YYYY');
-
-                                                    return <tr key={index} className='border-bottom mb-3' >
-                                                        <td>{date}</td>
-                                                        <td> {heure_debut} - {heure_fin}</td>
-                                                        <td> {absence.type_seance}</td>
-                                                        <td>{absence.module}</td>
-
-
-                                                        {user.role.label == 'coordinator' &&
-
-                                                            <button className='btn btn-success mx-3 mb-3'>Justify</button>
-
-                                                        }
-
-
-                                                    </tr>
-
-
-                                                })
-                                            }
-                                        </tbody>
-
-                                    </table> :
-                                    <p className='fw-bold border-0 text-center text-black-50 fst-italic'>No absences.</p>
-
-                                } */}
 
                                     <Absences absences={absences.notjustified} message="No absences." user={user} />
 
@@ -451,14 +371,6 @@ function Profile({ student }) {
                                 isAttendance={true}
                             />
 
-                            {/* {selectedChart == "modules" && <BarChart
-                                dataLabel={dataLabelByModules}
-                                datasetsLabel='Attendance rate'
-                                datasetsData={datasetsDataByModules}
-                                chartTitle='Attendance rate per weeks (%)'
-                                legendPosition='bottom'
-                                isAttendance={true}
-                            />} */}
                         </div>
 
                     </div>

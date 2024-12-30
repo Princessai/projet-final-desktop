@@ -10,7 +10,6 @@ function BarChart({
     axisDirection = 'y',
     chartTitle,
     legendPosition,
-    isAttendance = false,
     isStacked = false,
     datalabels,
     canvaHeigth = 300,
@@ -76,7 +75,7 @@ function BarChart({
                         anchor: "center", // Position the text at the end of the bar
                         align: "start", // Align text horizontally inside the bar
                         textAlign: 'center',
-                        font: {size: 14}, // Font styling
+                        font: {size: 12}, // Font styling
                         clamp: true,
                         display: function(context) {
                             // Check if the value is 0
