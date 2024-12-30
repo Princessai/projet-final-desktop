@@ -189,7 +189,7 @@ function Graphic() {
                             {selectedView === 'allClasses' &&
                                 <div className='my-3 mx-3'>
 
-                                    <div className='my-3'>
+                                    <div className='my-5'>
                                         <BarChart
                                             dataLabel={classesAttendanceLabel}
                                             datasetsLabel='Attendance Rate'
@@ -220,7 +220,7 @@ function Graphic() {
                                         </div>
 
 
-                                        <div className='my-3'>
+                                        <div className='my-5'>
                                             <BarChart
                                                 dataLabel={classesAttendanceLabel}
                                                 datasetsLabel='Attendance Rate'
