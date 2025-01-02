@@ -115,6 +115,13 @@ function BarChart({
 
     }, [dataLabel, datasetsData, chartTitle]);
 
+    useEffect(()=>{
+        if (datasets){
+            myBarChart.current.config.data.datasets = datasets; 
+            myBarChart.current.update();
+
+        }
+    },[datasets])
 
     return (
         <div style={{ position: "relative", height: `${canvaHeigth}px`, width: `${canvaWidth}%` }}>

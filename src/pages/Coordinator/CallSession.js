@@ -125,6 +125,8 @@ function CoordinatorsessionCall() {
                   <div>
                     {sessionStudents.map(function (student, index) {
                       let studentId = "student_" + student.id;
+                      setValue(studentId,student.attendanceStatus);
+                      console.log('student.attendanceStatus',student.attendanceStatus)
 
                       // console.log('last',student.lastname)
                       return (
@@ -152,7 +154,8 @@ function CoordinatorsessionCall() {
                                   <input
                                     className="form-check-input present me-2 border-success"
                                     type="radio"
-                                    defaultValue="1"
+                                    value="1"
+                                    defaultChecked = {student.attendanceStatus == 1 ? true : false}
                                                                         
                                     id={"flexRadioDefault2" + student.id}
                                     {...register(studentId, { required: true })}
@@ -172,8 +175,8 @@ function CoordinatorsessionCall() {
                                   <input
                                     className="form-check-input late me-2 border-warning"
                                     type="radio"
-                                    defaultValue="-1"
-                                    
+                                    value="-1"
+                                    defaultChecked = {student.attendanceStatus == -1 ? true : false}
                                     id={"flexRadioDefault3" + student.id}
                                     {...register(studentId, { required: true })}
                                   />
@@ -193,8 +196,8 @@ function CoordinatorsessionCall() {
                                   <input
                                     className="form-check-input absent me-2 border-danger"
                                     type="radio"
-                                    defaultValue="0"
-                                    
+                                    value="0"
+                                    defaultChecked = {student.attendanceStatus == 0 ? true : false}
                                     id={"flexRadioDefault4" + student.id}
                                     {...register(studentId, { required: true })}
                                   />

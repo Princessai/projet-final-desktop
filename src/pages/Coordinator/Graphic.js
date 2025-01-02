@@ -78,8 +78,9 @@ function Graphic() {
         if (isUserAuthenticated) {
             fetchData();
         }
+        console.log('useeeeee')
 
-    }, [isUserAuthenticated, selectedGraph]);
+    }, [isUserAuthenticated]);
 
     let classes = graphicsData.classes;
     let classesAttendance = graphicsData.classesAttendance;
@@ -100,12 +101,16 @@ function Graphic() {
 
         if (classe.yearSegments.length > 0) {
             classe.yearSegments?.map(yearSegment => {
+
                 let number = yearSegment.number;
-                if (!semesterData[number]) {
-                    semesterData[number] = [];
+                if (selectedGraph == 'overall' || number == selectedGraph) {
+                    if (!semesterData[number]) {
+                        semesterData[number] = [];
+                    }
+                    const workedHours = yearSegment.workedHours?.all || '';
+                    semesterData[number].push(workedHours)
+
                 }
-                const workedHours = yearSegment.workedHours?.all || '';
-                semesterData[number].push(workedHours)
 
 
             })
