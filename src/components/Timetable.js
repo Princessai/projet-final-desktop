@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from "react";
+import React, { useEffect, useRef, useState, useMemo, memo } from "react";
 // import './Timetable.css';
 import classes from "./Timetable.module.css";
 import dayjs from "dayjs";
@@ -16,7 +16,7 @@ const timetableMode = {
   read: "read",
   edit: "edit",
 };
-const sessiontype = {
+export const sessiontype = {
   seances: "seances",
   breaks: "breaks"
 }
@@ -24,7 +24,7 @@ dayjs.extend(isoWeek);
 let isWaitingGlobal = true;
 let currentTimetableMode;
 
-function convertTimeStringToHour(timeString) {
+export function convertTimeStringToHour(timeString) {
 
   let timeStringHour
   let timeStringMinute
@@ -110,9 +110,9 @@ function smallestMultiplicativeFactor(step, minStep) {
     return step
   }
 
-  // if (Number.isInteger(step / minStep)) {
-  //   return minStep;
-  // }
+  if (Number.isInteger(step / minStep)) {
+    return minStep;
+  }
 
   while (true) {
     multiplicativeFactor = (multiplicativeFactor / divisor);
@@ -125,7 +125,7 @@ function smallestMultiplicativeFactor(step, minStep) {
 
 }
 
-function roundUpToStep(num, step = 0.25) {
+export function roundUpToStep(num, step = 0.25) {
   return Math.ceil(num / step) * step;
 }
 
@@ -211,10 +211,10 @@ function TimetableTd({
     });
     hasRunOnce.current = true;
   });
-  const type_seance = seance.type_seance.label;
-  const module = seance.module.label;
-  const teacher = `${seance.manager.name} ${seance.manager.lastname}`;
-  const salle = seance.salle.label;
+  const type_seance = seance?.type_seance?.label;
+  const module = seance.module?.label;
+  const teacher = `${seance?.manager?.name} ${seance?.manager?.lastname}`;
+  const salle = seance?.salle?.label;
   const seanceStart = dayjs(seance.heure_debut).format('HH:mm')
   const seanceEnd = dayjs(seance.heure_fin).format('HH:mm')
 
@@ -262,13 +262,14 @@ function Timetable({
   timetableEnd,
   mode = timetableMode.edit,
   breaks = [],
-  seances = []
-
+  seances = [],
+  timetableStep = '02:35'
 }) {
+  console.log("🚀 ~ seances:", seances)
   const props = arguments[0];
   const specificTimeScaleByRows = {}
   const RowsintervalsObj = {}
-  let timetableStep = props.timetableStep ? props.timetableStep : '02:35';
+  // let timetableStep = props.timetableStep ? props.timetableStep : ;
 
   const myTimetableRef = useRef(null);
 
@@ -544,6 +545,8 @@ function Timetable({
       }
       const dayOfWeek = heure_debut.day();
 
+
+
       const dayIndex = dayOfWeek - 1;
 
       const seanceObj = { seance, index };
@@ -556,6 +559,8 @@ function Timetable({
     return seancesByDayArr;
 
   }, [seances]);
+
+
 
   const { totalHour: timetableStepInHours, timeStringHour: timetableStepHour,
     timeStringMinute: timetableStepMinute } = convertTimeStringToHour(timetableStep);
@@ -1009,6 +1014,7 @@ function Timetable({
 
 
 
+
       const findedseanceObj = daySeances.find(function (seanceObj) {
         const { seance, index } = seanceObj;
         const seanceStart = dayjs(seance.heure_debut);
@@ -1016,6 +1022,7 @@ function Timetable({
         return (seanceStart.isSame(dayStepStart) || (seanceStart.isAfter(dayStepStart) && seanceStart.isBefore(dayStepEnd)));
 
       });
+
 
 
 
@@ -1264,8 +1271,11 @@ function Timetable({
               }
             });
 
-            if (oldTrRef !== null && hasRunOnce) {
+
+            if (oldTrRef !== null && oldTrRef.style.height != rowHeight + "px") {
               oldTrRef.style.height = rowHeight + "px";
+              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height hasRunOnce:", oldTrRef.style.height)
+
             }
 
 
@@ -1274,6 +1284,8 @@ function Timetable({
             if (oldTrRef !== null && prevHeightDiff != 0) {
               oldTrRef.style.height =
                 oldTrRef.getBoundingClientRect().height + prevHeightDiff + "px";
+              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height:", oldTrRef.style.height, prevHeightDiff)
+
               modifiedTrsObj[prevRowNumber] = prevHeightDiff;
             }
 
@@ -1682,7 +1694,7 @@ function Timetable({
       const computedBorderWidth = parseFloat(window.getComputedStyle(innerBorderRef.current).borderWidth);
       mousePosYInTimetable -= computedBorderWidth;
 
-      console.log("🚀 ~ onTimetableClick ~ mousePosYInTimetable:", mousePosYInTimetable)
+      // console.log("🚀 ~ onTimetableClick ~ mousePosYInTimetable:", mousePosYInTimetable)
 
       mousePosYInTimetable = mousePosYInTimetable < 0 ? 0 : mousePosYInTimetable;
       if (mousePosYInTimetable >= mousePseudoRowBottom - (computedBorderWidth * 2)) mousePosYInTimetable = mousePseudoRowBottom;
@@ -1700,13 +1712,13 @@ function Timetable({
 
     mouseRowPosY = Math.floor(mouseRowPosY);
     const mouseLineTotalHoursStart = (mousePseudoRow * step) + dayStartTotalHours;
-    console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursStart:", step, mouseLineTotalHoursStart)
+    // console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursStart:", step, mouseLineTotalHoursStart)
 
     const mouseLineTotalHoursEnd = mouseLineTotalHoursStart + step;
 
-    console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursEnd:", mouseLineTotalHoursEnd)
+    // console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursEnd:", mouseLineTotalHoursEnd)
 
-    console.log("🚀 ~ onTimetableClick ~ mouseRowPosY:", mouseRowPosY)
+    // console.log("🚀 ~ onTimetableClick ~ mouseRowPosY:", mouseRowPosY)
 
     // let prevTimescale = mouseLineTotalHoursStart;
     // let prevPos = 0;
@@ -1807,7 +1819,7 @@ function Timetable({
         if (findedInterval) {
           const intervalStart = findedInterval[0];
           const intervalEnd = findedInterval[1];
-          console.log(intervalEnd.time - intervalStart.time, intervalEnd.pos - intervalStart.pos)
+          // console.log(intervalEnd.time - intervalStart.time, intervalEnd.pos - intervalStart.pos)
           const a = (intervalEnd.time - intervalStart.time) / (intervalEnd.pos - intervalStart.pos)
           let b;
 
@@ -1911,21 +1923,22 @@ function Timetable({
 
 
 
-        const timetableStartDayjs = dayjs(timetableStart).startOf("isoWeek")
+        const date = dayjs(timetableStart)
           .set('hours', 0)
           .set('minutes', 0)
-          .add(col, 'day');
+          .add(col, 'day')
+          .format("YYYY-MM-DD HH:mm:ss");
 
 
-        const day = timetableStartDayjs.day();
+
 
 
         /**
          * heure de début et de fin des pseudo lignes
          */
         const pseudoLineHourStart = dayjs(timetableStart)
-
-
+          .set('hours', 0)
+          .set('minutes', 0)
           .add(dayStartHour, 'hours')
           .add(dayStartMinute, 'minutes')
           .add(stepHour * pseudoRow, 'hours')
@@ -1987,7 +2000,7 @@ function Timetable({
           col,
           data,
           datacol,
-          day,
+          date,
           ElementPseudoLineHourStart: pseudoLineHourStart.format('HH:mm'),
           ElementPseudoLineHourEnd: pseudoLineHourEnd.format('HH:mm'),
           ElementLineHourStart: LineHourStart.format('HH:mm'),
@@ -2003,7 +2016,8 @@ function Timetable({
           mouseRow,
           mousePseudoRowTop,
           mousePosInHour,
-          upperSeance
+          upperSeance,
+          hasPseudoRows
 
         }
 
@@ -2077,5 +2091,5 @@ function Timetable({
     </div>
   );
 }
+export default memo(Timetable);
 
-export default Timetable;

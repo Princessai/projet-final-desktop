@@ -187,7 +187,7 @@ const router = createHashRouter([
     ),
   },
   {
-    path: routeRegister.getRoute("coordinatoradd-timetable") + "/:classe_label",
+    path: routeRegister.getRoute("coordinatoradd-timetable") + "/:classe_id/:classe_label",
     element: (
       <ProtectedRoute>
         <AddTimetable />

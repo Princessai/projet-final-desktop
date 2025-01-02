@@ -6,6 +6,7 @@ function BarChart({
     dataLabel,
     datasetsLabel,
     datasetsData,
+    datasets,
     datasetsBgColor,
     axisDirection = 'y',
     chartTitle,
@@ -54,7 +55,7 @@ function BarChart({
             type: "bar",
             data: {
                 labels: dataLabel,
-                datasets: [
+                datasets: datasets ? datasets : [
                     {
                         label: datasetsLabel,
                         data: datasetsData,
@@ -75,9 +76,9 @@ function BarChart({
                         anchor: "center", // Position the text at the end of the bar
                         align: "start", // Align text horizontally inside the bar
                         textAlign: 'center',
-                        font: {size: 12}, // Font styling
+                        font: { size: 12 }, // Font styling
                         clamp: true,
-                        display: function(context) {
+                        display: function (context) {
                             // Check if the value is 0
                             return context.dataset.data[context.dataIndex] !== 0;
                         },
@@ -102,7 +103,7 @@ function BarChart({
         if (dataLabel.length !== 0) {
             myBarChart.current.config.data.labels = dataLabel;
         }
-        if (datasetsData.length !== 0) {
+        if (datasetsData && datasetsData.length !== 0) {
             myBarChart.current.config.data.datasets[0].data = datasetsData;
         }
         if (chartTitle.length !== 0) {

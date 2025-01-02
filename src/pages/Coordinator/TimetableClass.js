@@ -8,6 +8,7 @@ import Timetable from '../../components/Timetable';
 import { useAuth } from '../../Providers/AuthProvider';
 import { FallbackContent } from '../../components/FallbackContent';
 import { routeRegister } from '../../../route.js';
+
 import dayjs from 'dayjs';
 
 function TimetableClassPage() {
@@ -65,7 +66,7 @@ function TimetableClassPage() {
 
 
     if (loading) return <FallbackContent />;
-    console.log('timetables(((((', timetables)
+   
     
     const currentTimetable = timetables[0];
 
@@ -114,7 +115,7 @@ function TimetableClassPage() {
 
                             </div>
                             <div className="col-md-2 d-flex justify-content-center">
-                                <Link to={`/coordinator/add-timetable/${classe_label}`}>
+                                <Link to={`/coordinator/add-timetable/${classe_id}/${classe_label}`}>
                                     <button type="button" className="btn btn-success m-2">Add Timetable</button>
                                 </Link>
 

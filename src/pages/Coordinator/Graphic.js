@@ -13,7 +13,7 @@ function Graphic() {
 
     const [selectedView, setSelectedView] = useState("allClasses");
 
-    const [selectedGraph, setSelectedGraph] = useState(1);
+    const [selectedGraph, setSelectedGraph] = useState('overall');
 
     const { isUserAuthenticated } = useAuth();
 
@@ -27,8 +27,9 @@ function Graphic() {
     const { axios } = useAxios();
 
 
-    const [loading, setLoading] = useState(true);  // État de chargement
+    const [loading, setLoading] = useState(false);  // État de chargement
 
+    const semesters = selectedGraph === 'overall' ? [1, 2, 3] : selectedGraph;
 
     function fetchData() {
         /*
@@ -39,12 +40,12 @@ function Graphic() {
         Promise.all([
             axios.get(`/presence/classes`),
             axios.get(`/list/classes`),
-            axios.get(`/gethours/classes/year_segments/${selectedGraph}`),
+            axios.get(`/gethours/classes/year_segments/${semesters}`),
         ])
             .then(([classesAttendanceRes, classesRes, semesterAttendancesRes]) => {
                 setGraphicsData({
                     classesAttendance: classesAttendanceRes.data,
-                    semesterAttendances : semesterAttendancesRes.data,
+                    semesterAttendances: semesterAttendancesRes.data,
                     classes: classesRes.data,
                 });
                 console.log('classes innn useffect', graphicsData.classes);
@@ -90,6 +91,62 @@ function Graphic() {
     let classesAttendanceData = [];
     let classesAttendanceLabel = [];
 
+    let semesterAttendancesData = [];
+    let semesterAttendancesLabel = [];
+
+    let semesterData = {};
+
+    semesterAttendances?.map(classe => {
+
+        if (classe.yearSegments.length > 0) {
+            classe.yearSegments?.map(yearSegment => {
+                let number = yearSegment.number;
+                if (!semesterData[number]) {
+                    semesterData[number] = [];
+                }
+                const workedHours = yearSegment.workedHours?.all || '';
+                semesterData[number].push(workedHours)
+
+
+            })
+
+        }
+    });
+    console.log("🚀 ~ Graphic ~ semesterData:", semesterData)
+
+    semesterAttendancesData = Object.keys(semesterData).map((semesterNumber) => {
+
+        return {
+            label: `Semester ${semesterNumber}`,
+            data: semesterData[semesterNumber]
+        }
+
+    })
+    console.log("🚀 ~ semesterAttendancesData=Object.keys ~ semesterAttendancesData:", semesterAttendancesData)
+
+
+    // semesterAttendances?.map(classe => {
+    //     let currentDataset = {};
+    //     if (classe.yearSegments.length > 0) {
+    //         currentDataset = classe.yearSegments?.map(yearSegment => {
+    //             return {
+    //                 label: `${yearSegment.type} ${yearSegment.number}`,
+    //                 data: [yearSegment.workedHours?.all] || ''
+    //             }
+    //             // data.label = `${yearSegment.type} ${yearSegment.number}`;
+    //             // data.data = yearSegment.workedHours?.all || '';
+
+    //         })
+    //         semesterAttendancesData.push(currentDataset)
+    //     }
+    //     // if (classe.yearSegments.length == 1) {
+    //     //     // data = classe.yearSegments[0].workedHours?.all || '';
+    //     //     semesterAttendancesData.push(classe.yearSegments[0].workedHours?.all)
+    //     // }
+
+    // });
+
+
     classesAttendance?.map((classe) => {
         classesAttendanceData.push(classe.classeAttendanceRate);
         classesAttendanceLabel.push(classe.label);
@@ -104,7 +161,6 @@ function Graphic() {
     });
 
     // let  semesterAttendanceData = [];
-    let chartTitle = "Year-to-date Classes Attendance Rate";
 
     // if (selectedGraph == 'semester1') {
     //     chartTitle= "1st Semester Classes Attendance Rate";
@@ -190,12 +246,13 @@ function Graphic() {
                                 <div className='my-3 mx-3'>
 
                                     <div className='my-5'>
+                                        <h4 className='text-center'>Year-to-date Classes Attendance Rate</h4>
                                         <BarChart
                                             dataLabel={classesAttendanceLabel}
                                             datasetsLabel='Attendance Rate'
                                             datasetsData={classesAttendanceData}
                                             datasetsBgColor={datasetsBgColor}
-                                            chartTitle={chartTitle}
+                                            chartTitle="Year-to-date Classes Attendance Rate"
                                             legendPosition="bottom"
                                             canvaHeigth={400}
                                         />
@@ -210,7 +267,8 @@ function Graphic() {
                                                     aria-label="Default select example"
                                                     value={selectedGraph}
                                                     onChange={(e) => setSelectedGraph(e.target.value)}
-                                                >                                                  
+                                                >
+                                                    <option value="overall">Overall</option>
                                                     <option value="1">Semester 1</option>
                                                     <option value="2">Semester 2</option>
                                                     <option value="3">Semester 3</option>
@@ -221,14 +279,17 @@ function Graphic() {
 
 
                                         <div className='my-5'>
+                                            <h4 className='text-center'>Classes Worked Hours per semester</h4>
+
                                             <BarChart
                                                 dataLabel={classesAttendanceLabel}
-                                                datasetsLabel='Attendance Rate'
-                                                datasetsData={classesAttendanceData}
-                                                datasetsBgColor={datasetsBgColor}
-                                                chartTitle={chartTitle}
+                                                datasetsLabel='Worked Hours'
+                                                datasets={semesterAttendancesData}
+                                                datasetsBgColor={['#002060', '#8FAADC']}
+                                                chartTitle={selectedGraph == 'overall' ? 'Overall' : `Semester ${selectedGraph}`}
                                                 legendPosition="bottom"
-                                                canvaHeigth={400}
+                                                isStacked={true}
+                                                canvaHeigth={600}
                                             />
 
                                         </div>
