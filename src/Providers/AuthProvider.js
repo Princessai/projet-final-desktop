@@ -77,7 +77,7 @@ export function AuthContextProvider({ children }) {
 
         setAxiosToken(token);
 
-        axios.get('/logged_user/infos')
+      return  axios.get('/logged_user/infos')
             .then(function (response) {
 
                 const userInfo = response.data.user;
@@ -89,7 +89,11 @@ export function AuthContextProvider({ children }) {
 
                 return response;
 
-            });
+            })
+            .catch((error)=>{
+                console.error(error)
+            })
+            ;
 
 
     }

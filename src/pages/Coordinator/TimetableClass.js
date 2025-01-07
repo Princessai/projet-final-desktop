@@ -10,6 +10,7 @@ import { FallbackContent } from '../../components/FallbackContent';
 import { routeRegister } from '../../../route.js';
 
 import dayjs from 'dayjs';
+import { SaveAltOutlined } from '@mui/icons-material';
 
 function TimetableClassPage() {
 
@@ -126,7 +127,9 @@ function TimetableClassPage() {
 
                             <div className='mx-5'>
                                 <h5 className='text-center fw-bold text-decoration-underline mb-5'> Timetable from {date_debut} to {date_fin}</h5>
-
+                                    <div>
+                                        <SaveAltOutlined/>
+                                    </div>
                                 <Timetable  seances={currentTimetable.seances}
                                     breaks={currentTimetable.pauses} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
 

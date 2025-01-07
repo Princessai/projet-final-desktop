@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import SidebarCoordinator from "../../components/SidebarCoordinator";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useAxios } from "../../Providers/AxiosProvider";
 import { FallbackContent } from "../../components/FallbackContent";
@@ -12,19 +12,19 @@ import dayjs from "dayjs";
 function CoordinatorsessionCall() {
   const { mode, seance_id, seance_classe, heure_debut, heure_fin } = useParams();
 
-  console.log(mode);
-
   const { register, handleSubmit, formState, setValue, setError, clearErrors } = useForm();
 
   let seanceStart = dayjs(heure_debut).format("HH:mm");
   let seanceEnd = dayjs(heure_fin).format("HH:mm");
 
-  console.log("seance_id", seance_id);
 
   const attendanceFormRef = useRef();
-
+  const navigate = useNavigate();
 
   const [sessionStudents, setSessionStudents] = useState([]);
+
+  // const [responseMessage, setResponseMessage] = useState('');
+
   const [loading, setLoading] = useState(true); // État de chargement
   const { axios } = useAxios();
 
@@ -90,10 +90,17 @@ function CoordinatorsessionCall() {
       .post(`/attendance-record/${action}/${seance_id}`, { attendances: attendancesData })
       .then((response) => {
         console.log(response.message);
+        navigate('/coordinator/call', {
+          state: response.message
+        });
+        
       })
       .catch((error) => {
         console.error("Error making attendance:", error);
       });
+
+    
+    
   }
 
   return (
@@ -125,10 +132,9 @@ function CoordinatorsessionCall() {
                   <div>
                     {sessionStudents.map(function (student, index) {
                       let studentId = "student_" + student.id;
-                      setValue(studentId,student.attendanceStatus);
-                      console.log('student.attendanceStatus',student.attendanceStatus)
+                      setValue(studentId, student.attendanceStatus);
+                      console.log('student.attendanceStatus', student.attendanceStatus)
 
-                      // console.log('last',student.lastname)
                       return (
                         <div
                           className="d-flex align-items-center p-3"
@@ -155,8 +161,8 @@ function CoordinatorsessionCall() {
                                     className="form-check-input present me-2 border-success"
                                     type="radio"
                                     value="1"
-                                    defaultChecked = {student.attendanceStatus == 1 ? true : false}
-                                                                        
+                                    defaultChecked={student.attendanceStatus == 1 ? true : false}
+
                                     id={"flexRadioDefault2" + student.id}
                                     {...register(studentId, { required: true })}
                                   />
@@ -175,8 +181,8 @@ function CoordinatorsessionCall() {
                                   <input
                                     className="form-check-input late me-2 border-warning"
                                     type="radio"
-                                    value="-1"
-                                    defaultChecked = {student.attendanceStatus == -1 ? true : false}
+                                    value="0"
+                                    defaultChecked={student.attendanceStatus == -1 ? true : false}
                                     id={"flexRadioDefault3" + student.id}
                                     {...register(studentId, { required: true })}
                                   />
@@ -196,8 +202,8 @@ function CoordinatorsessionCall() {
                                   <input
                                     className="form-check-input absent me-2 border-danger"
                                     type="radio"
-                                    value="0"
-                                    defaultChecked = {student.attendanceStatus == 0 ? true : false}
+                                    value="-1"
+                                    defaultChecked={student.attendanceStatus == 0 ? true : false}
                                     id={"flexRadioDefault4" + student.id}
                                     {...register(studentId, { required: true })}
                                   />
@@ -206,7 +212,7 @@ function CoordinatorsessionCall() {
                               </div>
 
 
-                              
+
                             </div>
                           </div>
                         </div>

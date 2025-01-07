@@ -3,11 +3,13 @@ import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import SidebarCoordinator from '../../components/SidebarCoordinator';
 // import '/src/pages/Presence/presence.css';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../Providers/AuthProvider';
 import { useAxios } from '../../Providers/AxiosProvider';
 import { FallbackContent } from '../../components/FallbackContent';
 import dayjs from 'dayjs';
+import { Box, Snackbar } from '@mui/material';
+import { green } from '@mui/material/colors';
 
 
 let sessionType = {
@@ -19,19 +21,55 @@ function Call() {
     const { user, isUserAuthenticated } = useAuth();
     const timeoutArr = useRef([]);
 
-    let userId = user.id
+    let userId = user.id;
+
+    let location = useLocation();
+    console.log("🚀 ~ Call ~ location.state:", location.state)
+
+    const [snackBar, setSnackBar] = useState({
+        open: location.state ? true : false,
+        vertical: 'top',
+        horizontal: 'center',
+    });
+
+    const { vertical, horizontal, open } = snackBar
+
+    const handleClose = () => {
+        setSnackBar({ ...snackBar, open: false });
+    };
+
+
+    useEffect(() => {
+
+        let timer = setTimeout(() => {
+            handleClose();
+            location.state = null;
+
+
+        }, 5000);
+
+
+        return (() => {
+            clearTimeout(timer);
+        })
+
+    }, [])
+
 
     console.log('userrr', user);
-    const  floatingMinute = 10;
+    const floatingMinute = 10;
     const [userSessions, setUserSessions] = useState();
     const [type, setType] = useState(sessionType.comming);
     const [loading, setLoading] = useState(true);  // État de chargement
+
+
+
 
     timeoutArr.current.forEach(timer => {
         clearTimeout(timer);
     });
 
-    timeoutArr.current=[];
+    timeoutArr.current = [];
 
     const { axios } = useAxios();
 
@@ -63,6 +101,8 @@ function Call() {
         }
 
     }, [isUserAuthenticated]);
+
+
 
     console.log(userSessions);
 
@@ -101,12 +141,29 @@ function Call() {
 
     console.log(type);
 
+
+
     return (
         <div className='div-container d-flex flex-column'>
             <Navbar />
             <div className='body-content-container d-flex'>
                 < SidebarCoordinator />
                 <section className='content-container'>
+                    <Box sx={{ width: 500 }}>
+                        <Snackbar
+                            sx={{
+                                '& .MuiSnackbarContent-root': {
+                                    backgroundColor: '#4caf50', // Set your background color
+                                    color: '#000',          // Set text color
+                                },
+                            }}
+                            anchorOrigin={{ vertical, horizontal }}
+                            open={open}
+                            // onClose={handleClose}
+                            message={location.state}
+                            key={vertical + horizontal}
+                        />
+                    </Box>
 
                     <div className="h-100 m-3 position-relative">
                         <div className="title-container col-md-12 mt-3 ms-5">
@@ -128,8 +185,8 @@ function Call() {
                                     let now = dayjs();
                                     let callTimeout = now.subtract(2, 'week');
 
-                                    console.log('conditionnn',type == sessionType.comming , (sessionStart.isBefore(now) || sessionStart.isSame(now)) ,
-                                     sessionEnd.add(floatingMinute, 'minutes').isAfter(now))
+                                    console.log('conditionnn', type == sessionType.comming, (sessionStart.isBefore(now) || sessionStart.isSame(now)),
+                                        sessionEnd.add(floatingMinute, 'minutes').isAfter(now))
 
                                     let sessionDayNAme = dayjs(session.date).format('dddd');
                                     // console.log('sessionDate', sessionDate);
@@ -139,11 +196,11 @@ function Call() {
                                         console.log("🚀 ~ timeout:", timeout)
 
                                         const timer = setTimeout(() => {
-                                            
+
                                             setUserSessions((oldValue) => {
                                                 const comming = oldValue.comming.filter(oldSession => oldSession.id != session.id)
                                                 const oldPassed = oldValue.passed
-                                                const passed = [session,...oldPassed]
+                                                const passed = [session, ...oldPassed]
                                                 return { comming, passed }
                                             })
                                         }, timeout);
@@ -157,7 +214,7 @@ function Call() {
 
                                         return <div key={index} className='bloc-presence shadow d-flex justify-content-between align-items-center text-center'>
                                             {/* <div></div> */}
-                                            tesssst
+
                                             <div className='fs-6 d-flex justify-content-around align-items-center fw-bold w-100'>
                                                 <p className="m-0">{sessionDayNAme} {sessionDate}, {sessionStart.format('HH:mm')}-{sessionEnd.format('HH:mm')}</p>
                                                 <p className="m-0">{session.type_seance.label} {session.module.label} </p>
@@ -188,7 +245,7 @@ function Call() {
                                     if (type == sessionType.passed && sessionEnd.isBefore(now)) {
 
                                         return <div key={index} className='bloc-presence shadow d-flex justify-content-between align-items-center text-center'>
-                                         
+
                                             <div className='fs-6 d-flex justify-content-around align-items-center fw-bold w-100'>
                                                 <p className="m-0">{sessionDayNAme} {sessionDate}, {sessionStart.format('HH:mm')}-{sessionEnd.format('HH:mm')}</p>
                                                 <p className="m-0">{session.type_seance.label} {session.module.label} </p>
@@ -222,43 +279,6 @@ function Call() {
                     </div>
 
 
-                    {/* <div class="row">
-                        <div class="col-md-12 mt-3 ms-5">
-                            <h1 class='py-3'>Session</h1>
-                        </div>
-                        <div class="col-md-12  pe-5 d-flex justify-content-end">
-                            <button type="button" class="btn btn-light me-3 shadow   rounded"> <strong>current session</strong> </button>
-                            <button type="button" class="btn btn-light me-3 shadow  rounded">  <strong>past session</strong> </button>
-                        </div>
-                        <div class="col-md-12 ">
-                            <div className='bloc-presence shadow d-flex justify-content-between align-items-center m-auto text-center mt-5 mb-4' >
-                                <div></div>
-                                <div>MARDI 9h-12h</div
-                                >
-                
-                                <Link to={'/coordinator/call/session'}>
-                                    <button type="button" class="btn btn-success">Start session</button>
-                                </Link>
-                            </div>
-
-                            <div className='bloc-inactif shadow d-flex justify-content-center align-items-center m-auto text-center mt-5 mb-4' >
-
-                                <div class="me-5">MARD
-                                I 9h-12h</div>
-
-               
-                                </div>
-
-                            <div className='bloc-inactif shadow d-flex justify-content-center align-items-center m-auto text-center mt-5 mb-4' >
-
-                                <div class="me-5">MARD
-                                I 9h-12h</div>
-
-               
-                                </div>
-
-                        </div>
-                    </div> */}
 
                 </section>
             </div>

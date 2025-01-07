@@ -25,7 +25,7 @@ function ClasseInfos() {
 
 
                             <div className="card w-25 shadow text-center p-3 m-5 rounded" >
-                                <img src="..." className="card-img-top" alt="..." />
+
                                 <Link to={`/coordinator/timetable/class/${classe_id}/${classe_label}`}>
                                     <div className="card-body px-0 py-3">
                                         <p className="card-text fw-bold">Timetables </p>
@@ -35,7 +35,7 @@ function ClasseInfos() {
 
 
                             <div className="card w-25 shadow text-center p-3 m-5 rounded" >
-                                <img src="..." className="card-img-top" alt="..." />
+
                                 <Link to={`/coordinator/userClass/${classe_id}/${classe_label}`}>
                                     <div className="card-body px-0 py-3">
                                         <p className="card-text fw-bold">Students' list </p>
@@ -55,8 +55,8 @@ function ClasseInfos() {
 
 
                             <div className="card w-25 shadow text-center p-3 m-5 rounded" >
-                                <img src="..." className="card-img-top" alt="..." />
-                                <Link to={``}>
+
+                                <Link to={`/coordinator/graphic/class/details/${classe_id}/${classe_label}`}>
                                     <div className="card-body px-0 py-3">
                                         <p className="card-text fw-bold">Graphics </p>
                                     </div>

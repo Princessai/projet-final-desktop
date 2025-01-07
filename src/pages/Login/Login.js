@@ -56,13 +56,17 @@ function Login() {
                 const data = response.data;
                 const errors = data.errors;
 
-                const errorsKeys = Object.keys(errors);
-                if (errorsKeys.length > 0) {
-                    errorsKeys.forEach(function (key) {
-                        setError(key, { message: errors[key] });
-                    });
+                if (errors) {
+                    const errorsKeys = Object.keys(errors);
+                    if (errorsKeys.length > 0) {
+                        errorsKeys.forEach(function (key) {
+                            setError(key, { message: errors[key] });
+                        });
+
+                    }
 
                 }
+
 
             });
     }

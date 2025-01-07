@@ -9,6 +9,13 @@
     width: 150px;
 }
 
-.header-container{
+.header-container {
     width: fit-content;
+}
+
+.absence-container {
+    height: 200px;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
 }

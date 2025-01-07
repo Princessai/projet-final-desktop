@@ -50,7 +50,14 @@ function BarChart({
         // Enregistrer le plugin pour toutes les cartes :
         Chart.register(ChartDataLabels);
 
+console.log('condition',datasets ? datasets : [
+    {
+        label: datasetsLabel,
+        data: datasetsData,
+        backgroundColor: datasetsBgColor,
+    },
 
+])
         myBarChart.current = new Chart(ctx, {
             type: "bar",
             data: {
@@ -77,6 +84,7 @@ function BarChart({
                         align: "start", // Align text horizontally inside the bar
                         textAlign: 'center',
                         font: { size: 12 }, // Font styling
+                        
                         clamp: true,
                         display: function (context) {
                             // Check if the value is 0

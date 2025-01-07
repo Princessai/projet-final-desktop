@@ -1,0 +1,36 @@
+.pathContainer {
+    width: 100%;
+    max-width: 200px;
+}
+
+.abs_path_container {
+
+    display: inline-block;
+    white-space: nowrap;
+    position: absolute;
+    left: 100%;
+    transform: translateX(-100%);
+    width: 30%;
+    overflow-x: clip;
+
+}
+
+.abs_path {
+    position: absolute;
+    left: 100%;
+    transform: translateX(-100%);
+    white-space: nowrap;
+    text-overflow: clip;
+}
+
+.path {
+
+
+    text-overflow: ellipsis;
+    display: inline-block;
+    white-space: nowrap;
+    width: 70%;
+    overflow-x: clip;
+    text-overflow: ellipsis;
+
+}

@@ -4,9 +4,12 @@ import Sidebar from '../../components/Sidebar';
 import Footer from '../../components/Footer';
 import { Link, useLocation } from 'react-router-dom';
 import Profile from '../../components/Profile';
+import { useAuth } from '../../Providers/AuthProvider';
 
 function StudentProfil() {
 
+    const { user } = useAuth();
+    console.log("🚀 ~ StudentProfil ~ user:", user)
 
   return (
     <div className='div-container d-flex flex-column'>
@@ -16,7 +19,7 @@ function StudentProfil() {
         <section className='content-container'>
           <div className="row">
 
-            <Profile />
+            <Profile student={user} classe_label={user.classe.label} />
             {/* <div className="col-md-12 d-flex  mb-5 mt-3 ms-5">
               <img src="..." className="rounded-circle me-5" alt="..." />
               <h2>

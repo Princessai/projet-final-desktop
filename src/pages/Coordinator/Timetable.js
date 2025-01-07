@@ -62,14 +62,7 @@ function TimetableCoordinator() {
                 <h1 className='py-3'>Class</h1>
               </div>
               <div className="col-md-12 d-flex justify-content-between">
-                <div>
-                  <select className="form-select ms-3 mb-5" defaultValue='0' aria-label="Default select example">
-                    <option value="0">Open this select menu</option>
-                    <option value="1">One</option>
-                    <option value="2">Two</option>
-                    <option value="3">Three</option>
-                  </select>
-                </div>
+             
 
                 <div>
                   <input className="form-control me-2" type="search" placeholder="Search" aria-label="Search" />

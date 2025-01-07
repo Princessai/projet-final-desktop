@@ -60,7 +60,7 @@ function PieOrDoughnutChart({
                                 type: 'doughnutLabel',
                                 content: ({ chart }) => ['Attendance mark',
                                     data.attendanceMark,
-                                    
+
                                 ],
                                 font: [{ size: 40 }, { size: 70 }],
                                 color: ['grey', 'red']
@@ -80,7 +80,7 @@ function PieOrDoughnutChart({
 
 
     return (
-        <div style={{ position: "relative", height: `${canvaHeigth}px`, width: `${canvaWidth}%` }}>
+        <div style={{ position: "relative", height: `${canvaHeigth}px`, width: `${canvaWidth}%`, minWidth: '100px' }}>
             <canvas ref={canvasRef}></canvas>
 
         </div>

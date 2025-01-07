@@ -6,6 +6,7 @@ import Footer from '../../components/Footer';
 import { Link, useParams } from 'react-router-dom';
 import { FallbackContent } from '../../components/FallbackContent';
 import { useAxios } from '../../Providers/AxiosProvider';
+import { useChild } from '../../Providers/ChildProvider';
 
 let selectedStudentId;
 
@@ -20,6 +21,8 @@ function UserClass() {
     const [messageVisible, setMessageVisible] = useState(false);
 
     const [confirmMessageVisible, setConfirmMessageVisible] = useState(false);
+
+    const { setSelectedChild } = useChild();
 
 
 
@@ -87,6 +90,7 @@ function UserClass() {
 
     }, [])
 
+    console.log('studentsList',studentsList);
 
     if (loading) return <FallbackContent />;
 
@@ -102,9 +106,7 @@ function UserClass() {
                         <div className="col-md-12 mb-4 mt-3 ps-5">
                             <h1 className='py-3'>{classe_label} student's list</h1>
                         </div>
-                        <div className="col-md-12 d-flex justify-content-end">
-                            <button type="button" className="btn btn-success me-3">Add Student</button>
-                        </div>
+                       
 
                         <div className="col-md-12 my-3 px-5">
                             <div
@@ -140,14 +142,15 @@ function UserClass() {
                                    <div className='picture-container'>
                                     <img src={student.picture} className='profile-picture' />
                                    </div>
-                                    <Link to={`/coordinator/userClass/profil/${student.id}`}>
+                                    <Link to={`/coordinator/userClass/profil/${student.id}/${classe_label}`}
+                                    state= {{student}}
+                                    onClick={() => setSelectedChild(student)}
+                                    >
                                         <h5> {student.name} {student.lastname} </h5>
                                     </Link>
 
                                     <div>
-                                        <Link to={''}>
-                                            <button type="button" className="btn btn-warning text-light me-2">EDIT</button>
-                                        </Link>
+                                        
                                         <Link to={''}>
                                             <button
                                                 type="button"
@@ -155,8 +158,7 @@ function UserClass() {
                                                 onClick={() => {
                                                     setConfirmMessageVisible(true);
                                                     selectedStudentId = student.id;
-                                                    console.log(student.id);
-                                                    console.log('selectedddrrrrr',selectedStudentId);
+                                                   
                                                 }} >DELETE</button>
                                         </Link>
                                     </div>

@@ -10,6 +10,7 @@ import { FallbackContent } from "./FallbackContent";
 import { useParams } from "react-router-dom";
 import { throttle, debounce } from "../../utilities/debounce_throttle.js";
 import { format } from "date-fns";
+import * as yup from "yup";
 
 
 const timetableMode = {
@@ -250,7 +251,34 @@ function TimetableTd({
 
 // }
 
+const timetableSchema = yup.object().shape({
+  timetableStart: yup.string().required(),
+  timetableEnd: yup.string().required(),
+});
 
+let errors;
+const validateData = async (data) => {
+  console.log("🚀 ~ validateData ~ data:", data)
+
+  try {
+    errors = null
+    timetableSchema.validateSync(data, { abortEarly: false });
+
+  } catch (error) {
+    if (error instanceof yup.ValidationError) {
+      const validationErrors = {}
+      error.inner.forEach(eacherror => {
+        if (eacherror.path) {
+          validationErrors[eacherror.path] = eacherror.message;
+        }
+      });
+      console.log("Validation Errors:", validationErrors);
+
+
+      errors = validationErrors // Array of error messages
+    }
+  }
+};
 
 function Timetable({
 
@@ -263,15 +291,34 @@ function Timetable({
   mode = timetableMode.edit,
   breaks = [],
   seances = [],
-  timetableStep = '02:35'
+  timetableStep = '01:00',
+  onError,
+  timetableStartHour = '09:00',
+  timetableEndHour = '17:00'
 }) {
   console.log("🚀 ~ seances:", seances)
   const props = arguments[0];
   const specificTimeScaleByRows = {}
   const RowsintervalsObj = {}
-  // let timetableStep = props.timetableStep ? props.timetableStep : ;
+ 
 
+  useEffect(() => {
+    validateData({
+      timetableStart,
+      timetableEnd,
+    })
+
+    if(onError)onError(errors);
+
+  }, [timetableStart, timetableEnd])
+
+  const dayStartHourString = timetableStartHour;
+  const dayEndHourString = timetableEndHour;
+  console.log("🚀 ~ timetableEnd:", timetableEnd)
+  console.log("🚀 ~ timetableStart:", timetableStart)
+  console.log('errors', errors)
   const myTimetableRef = useRef(null);
+
 
   let hasPseudoRows = false;
 
@@ -295,6 +342,8 @@ function Timetable({
   let explicitRowCount = -1;
   const firstRowRef = useRef(null);
   const innerBorderRef = useRef(null);
+
+
 
 
   function onBreakcreate(breakRef, props) {
@@ -587,12 +636,23 @@ function Timetable({
   const maxDay = (timetableEnd !== null || timetableStart !== null) ? dayjs(timetableEnd).diff(timetableStart, "day") : 4;
 
 
-  const dayStartHourString = '9:30';
-  const dayEndHourString = 17;
+
   const { totalHour: dayStartTotalHours, timeStringHour: dayStartHour, timeStringMinute: dayStartMinute } =
     convertTimeStringToHour(dayStartHourString);
   const { totalHour: dayEndHours } = convertTimeStringToHour(dayEndHourString);
+  const { timeStringHour: dayEndInHour, timeStringMinute: dayEndInMinute } = convertTimeStringToHour(dayEndHours);
+
+
+  const dayEndFormat = dayjs()
+    .set("hour", dayEndInHour)
+    .set("minute", dayEndInMinute)
+    .set("second", 0)
+    .format("HH:mm");
+  console.log("🚀 ~ dayEndHours:", dayEndFormat)
+
+
   const rowHeight = (timetableHeight - borderWidth) / Math.round(((dayEndHours - dayStartTotalHours) / step));
+  let lastRowHeight;
   let timescaleWidthInPercentage = false;
   let timeScaleWidthUnit;
   timeScaleWidthUnit = timeScaleWidth;
@@ -626,6 +686,7 @@ function Timetable({
   const prevSeancesEnd = [];
   const specificTimeScale = [];
   const timetableALLBreaks = breaks;
+
 
   const date_debut = dayjs(weekStart).format("DD MMMM YYYY");
   const date_fin = dayjs(weekEnd).format("DD MMMM YYYY");
@@ -1095,12 +1156,21 @@ function Timetable({
           seanceStart.format("HH:mm"),
 
         )
+        let isEndingAtBreak = false
+        let isStartingAtBreak = false
+        let EndingAtBreak 
+         timetableALLBreaks.forEach((timetableBreak, index) => {
+          if (timetableBreak.debut == seanceEnd.format("HH:mm")) {
+            isEndingAtBreak = true;
+            EndingAtBreak = index;
+          }
 
-        const EndingAtBreak = timetableALLBreaks.findIndex((timetableBreak) => {
-          return timetableBreak.debut == seanceEnd.hour() + ':' + seanceEnd.minute()
+          if (timetableBreak.fin == seanceStart.format("HH:mm")) {
+            isStartingAtBreak = true;
+          }
         });
 
-        const isEndingAtBreak = EndingAtBreak !== -1;
+        // const isEndingAtBreak = EndingAtBreak !== -1;
 
         if (tdTimeOverFlow < 0) {
           const seanceEndTimeString = seanceEnd.format("HH:mm");
@@ -1134,14 +1204,33 @@ function Timetable({
         tdHeight = rowspan * rowHeight + "px";
 
         const tdTop = ((seanceStartTotalHour - hoursSteps) * rowHeight) / step + "px";
+        let boxShadow = ''
+        if (!isStartingAtBreak) {
+          boxShadow += ` 0px ${-borderWidth / 2}px black `
+        }
+
+
+        if (!isEndingAtBreak) {
+          if (boxShadow != '') {
+            boxShadow += ',';
+          }
+          boxShadow += `0px  ${borderWidth / 2}px black`
+        }
 
         const timeTableTdStyle = {
           height: tdHeight,
           border: borderStyle,
           fontSize: "13px",
           maxWidth: tdWidthUnit,
-          top: tdTop
+          top: tdTop,
+          boxShadow
         };
+
+        console.log('isEndingAtBreak&&isStartingAtBreak', !isEndingAtBreak && !isStartingAtBreak,)
+        console.log('isStartingAtBreak', isStartingAtBreak)
+        console.log('isEndingAtBreak', isEndingAtBreak)
+        console.log("🚀 ~ timeTableTdStyle:", timeTableTdStyle)
+
         const timeTableKey = 'TimetableTd ' + key
 
 
@@ -1160,7 +1249,11 @@ function Timetable({
           let isNotBreaksInTopLine;
           if (isEndingAtBreak) {
             const currentBreak = timetableALLBreaks[EndingAtBreak]
+            console.log("🚀 ~ onTdCreate ~ currentBreak:", currentBreak)
+            
+            console.log("🚀 ~ isNotBreaksInTopLine=breaksNotInTopLine.findIndex ~ breaksNotInTopLine:", breaksNotInTopLine)
             isNotBreaksInTopLine = breaksNotInTopLine.findIndex((BreakObj) => {
+              console.log('BreakObj',BreakObj, BreakObj?.name, currentBreak?.name)
               return BreakObj.name == currentBreak.name && BreakObj.debut == currentBreak.debut;
             }) !== -1
 
@@ -1202,65 +1295,6 @@ function Timetable({
             }
 
 
-            // if (specificTimeScaleByRows[prevRowNumber]) {
-
-            //   const intervals = [];
-
-            //   let prevTimescale = prevTdHoursSteps;
-            //   let prevPos = 0;
-
-
-            //   specificTimeScaleByRows[prevRowNumber].forEach((timeObj, index) => {
-            //     const intervalStart = {
-            //       time: prevTimescale,
-            //       pos: prevPos
-            //     };
-
-
-            //     let intervalEndPos;
-            //     let timeDiff = timeObj.totalHour - prevTdHoursSteps;
-
-            //     let spanTop = (timeDiff * 100) / step;
-            //     if (timeObj.istatic) {
-            //       spanTop = (spanTop * rowHeight) / 100;
-
-            //     } else {
-            //       spanTop = (spanTop * rowHeight + prevHeightDiff) / 100;
-
-            //     }
-
-            //     intervalEndPos = spanTop;
-
-            //     prevPos = intervalEndPos;
-            //     prevTimescale = timeObj.totalHour;
-
-            //     const intervalEnd = {
-            //       time: timeObj.totalHour,
-            //       pos: intervalEndPos
-            //     };
-            //     intervals.push([intervalStart, intervalEnd])
-
-
-            //   })
-
-            //   if (intervals.length > 0) {
-            //     const intervalStart = {
-            //       time: prevTimescale,
-            //       pos: prevPos
-            //     };
-            //     const intervalEnd = {
-            //       time: prevTdHoursSteps + step,
-            //       pos: rowHeight + prevHeightDiff
-            //     }
-            //     intervals.push([intervalStart, intervalEnd]);
-            //   }
-
-            //   if (intervals.length > 0) {
-            //     RowsintervalsObj[prevRowNumber] = intervals;
-
-            //   }
-            // }
-
 
             tdRefsRow.forEach((tdRef) => {
               if (oldTrRef === null) {
@@ -1268,13 +1302,14 @@ function Timetable({
               }
               if (prevHeightDiff != 0) {
                 tdRef.style.height = tdRef.getBoundingClientRect().height + prevHeightDiff + "px";
+                console.log("🚀 ~ tdRefsRow.forEach ~ tdRef:", tdRef)
               }
             });
 
 
             if (oldTrRef !== null && oldTrRef.style.height != rowHeight + "px") {
               oldTrRef.style.height = rowHeight + "px";
-              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height hasRunOnce:", oldTrRef.style.height)
+              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height hasRunOnce:", oldTrRef)
 
             }
 
@@ -1284,8 +1319,8 @@ function Timetable({
             if (oldTrRef !== null && prevHeightDiff != 0) {
               oldTrRef.style.height =
                 oldTrRef.getBoundingClientRect().height + prevHeightDiff + "px";
-              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height:", oldTrRef.style.height, prevHeightDiff)
-
+              console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height:", oldTrRef, oldTrRef.style.height, prevHeightDiff)
+              console.log(prevRowNumber)
               modifiedTrsObj[prevRowNumber] = prevHeightDiff;
             }
 
@@ -1296,18 +1331,7 @@ function Timetable({
           }
 
 
-          // if(tdRefsRow.length==0){
 
-          //   tdRefsRow.push([{tdRef,seance}]);
-          // }else{
-          //   tdRefsRow.find(tdRefsRowArr=>{
-
-          //     tdRefsRowArr.find(tdRefObj=>{
-          //       const tdRefObjSeance=tdRefObj.seance
-          //       dayjs(seance.heure_debut).isBefore()
-          //     })
-          //   })
-          // }
           tdRefsRow.push(tdRef);
 
           const trRef = tdRef.closest(`.${classes.tr}`);
@@ -1327,7 +1351,17 @@ function Timetable({
           }
 
           if (tdNumber == tdCount && hasRunOnce) {
-            trRef.style.height = rowHeight + "px";
+            console.log('td create last row height', trRef, lastRowHeight, prevHeightDiff)
+
+            if (rowNumber == lastRowNumber) {
+
+              console.log('last row reinitilize lastRowHeight ',lastRowHeight,rowHeight)
+              trRef.style.height = lastRowHeight + "px";
+            } else {
+              console.log('last row reinitilize')
+              trRef.style.height = rowHeight + "px";
+
+            }
           }
 
           if (tdNumber == tdCount && prevHeightDiff != 0) {
@@ -1446,14 +1480,7 @@ function Timetable({
       isDayEndStepMultiple = Number.isInteger((dayEndHours - dayStartTotalHours) / step);
 
       if (hoursStepsEnd > dayEndHours && !isDayEndStepMultiple) {
-        const { timeStringHour: dayEndInHour, timeStringMinute: dayEndInMinute } = convertTimeStringToHour(dayEndHours);
 
-
-        const dayEndFormat = dayjs()
-          .set("hour", dayEndInHour)
-          .set("minute", dayEndInMinute)
-          .set("second", 0)
-          .format("HH:mm");
 
         if (specificTimeScale.length == 0 || !specificTimeScale.includes(dayEndFormat)) {
           currentSpecificTimeScale.push(dayEndFormat);
@@ -1491,7 +1518,8 @@ function Timetable({
           const isTimescaleofToplineBreak = breaksNotInTopLine.findIndex((currentBreak) => {
             return currentBreak.debut == timeScaleString
               || currentBreak.fin == timeScaleString;
-          }) == -1;
+          }) == -1 && breaksNotInTopLine.length > 0;
+
 
           const isTimeScaleStartOfSeance = rowSeanceStartArr.includes(formatTime);
 
@@ -1508,6 +1536,11 @@ function Timetable({
 
           } else {
             spanTop += "%";
+          }
+
+
+          if (formatTime == dayEndFormat) {
+            spanTop = '100%';
           }
           return (
             <span
@@ -1528,11 +1561,6 @@ function Timetable({
       specificTimeScaleByRows[hoursStepsCounter] = datasetSpecificTimeScale;
 
     }
-
-
-
-
-
 
 
 
@@ -1563,7 +1591,7 @@ function Timetable({
     }
 
 
-    let lastRowHeight;
+
 
     let trHeight = rowHeight + "px";
 
@@ -1572,9 +1600,9 @@ function Timetable({
 
       lastRowHeight = (lastRowHeight * rowHeight) / 100;
 
-      lastRowHeight += 'px';
+      // lastRowHeight += 'px';
 
-      trHeight = lastRowHeight;
+      trHeight = lastRowHeight +'px';
 
 
 
@@ -1586,7 +1614,7 @@ function Timetable({
         data-specifictimescale={JSON.stringify(datasetSpecificTimeScale)}
         className={`${classes.timetableRow} ${classes.tr} ${islastLoop ? classes.lastRow : ''}  `}
         style={{ height: trHeight }}
-        key={hoursSteps}
+        key={hoursSteps + timeTableBody.length}
         data-row={hoursStepsCounter}
       >
         <div
@@ -1600,7 +1628,7 @@ function Timetable({
 
 
           {
-            // isStartMultiple && 
+            isStartMultiple &&
             <span className={`${classes.timeScaleElemnt}`}>
 
               {formatTime.format("HH:mm")}
@@ -1650,11 +1678,6 @@ function Timetable({
     event.stopPropagation();
     const target = event.target;
     const td = target.closest(`.${classes.td}`);
-    // const tr = target.closest(`.${classes.timetableRow}`);
-    // const specificTimescale = JSON.parse(tr.dataset.specifictimescale);
-
-
-
 
     const x = event.clientX;
     const y = event.clientY;
@@ -1673,9 +1696,7 @@ function Timetable({
 
     const mouseCol = Math.ceil(mousePosXInTimetable / colWidth) - 1
 
-    // if (mousePosYInTimetable < borderWidth / 2) {
-    //   mousePosYInTimetable = 0;
-    // } else
+
 
     if (mousePosYInTimetable > timetableRec.height - (borderWidth)) {
       mousePosYInTimetable = timetableRec.height - (borderWidth);
@@ -1694,7 +1715,7 @@ function Timetable({
       const computedBorderWidth = parseFloat(window.getComputedStyle(innerBorderRef.current).borderWidth);
       mousePosYInTimetable -= computedBorderWidth;
 
-      // console.log("🚀 ~ onTimetableClick ~ mousePosYInTimetable:", mousePosYInTimetable)
+
 
       mousePosYInTimetable = mousePosYInTimetable < 0 ? 0 : mousePosYInTimetable;
       if (mousePosYInTimetable >= mousePseudoRowBottom - (computedBorderWidth * 2)) mousePosYInTimetable = mousePseudoRowBottom;
@@ -1712,63 +1733,11 @@ function Timetable({
 
     mouseRowPosY = Math.floor(mouseRowPosY);
     const mouseLineTotalHoursStart = (mousePseudoRow * step) + dayStartTotalHours;
-    // console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursStart:", step, mouseLineTotalHoursStart)
 
     const mouseLineTotalHoursEnd = mouseLineTotalHoursStart + step;
 
-    // console.log("🚀 ~ onTimetableClick ~ mouseLineTotalHoursEnd:", mouseLineTotalHoursEnd)
-
-    // console.log("🚀 ~ onTimetableClick ~ mouseRowPosY:", mouseRowPosY)
-
-    // let prevTimescale = mouseLineTotalHoursStart;
-    // let prevPos = 0;
-    // specificTimescale.forEach((timeObj, index) => {
-    //   const intervalStart = {
-    //     time: prevTimescale,
-    //     pos: prevPos
-    //   };
 
 
-    //   let intervalEndPos;
-    //   let timeDiff = timeObj.totalHour - mouseLineTotalHoursStart;
-
-    //   let spanTop = (timeDiff * 100) / step;
-    //   if (timeObj.istatic) {
-    //     spanTop = (spanTop * rowHeight) / 100;
-
-    //   } else {
-    //     spanTop = (spanTop * MouseRowPosObj.rowHeight) / 100;
-
-    //   }
-
-    //   intervalEndPos = spanTop;
-
-    //   prevPos = intervalEndPos;
-    //   prevTimescale = timeObj.totalHour;
-
-    //   const intervalEnd = {
-    //     time: timeObj.totalHour,
-    //     pos: intervalEndPos
-    //   };
-    //   intervals.push([intervalStart, intervalEnd])
-
-
-    // })
-    // if (intervals.length > 0) {
-    //   const intervalStart = {
-    //     time: prevTimescale,
-    //     pos: prevPos
-    //   };
-    //   const intervalEnd = {
-    //     time: mouseLineTotalHoursEnd,
-    //     pos: MouseRowPosObj.rowHeight
-    //   }
-    //   intervals.push([intervalStart, intervalEnd]);
-    // }
-
-
-
-    // if (!td) return;
     if (mode == timetableMode.edit && timetableStart) {
       if (onTdClick) {
 
@@ -1864,14 +1833,6 @@ function Timetable({
               upperSeanceType = sessiontype.seances;
             }
           }
-          // console.log("🚀 ~ datacol.forEach ~ seance.heure_fin:", seance.heure_fin)
-          // console.log("🚀 ~ datacol.forEach ~ lineStart:", lineStart)
-          // console.log("🚀 ~ datacol.forEach ~ seanceEnd:", seanceEnd)
-          // console.log("🚀 ~ datacol.forEach ~ mousePosInHour:", mousePosInHour)
-          // console.log("🚀 ~ datacol.forEach ~ prevUpperSeance:", prevUpperSeance)
-          // console.log("🚀 ~ datacol.forEach ~ seanceEnd < mousePosInHour && seanceEnd > lineStart:", seanceEnd < mousePosInHour && seanceEnd > lineStart)
-          // console.log("🚀 ~ datacol.forEach ~ hasPseudoRows:", hasPseudoRows)
-
 
         })
 
@@ -1916,21 +1877,12 @@ function Timetable({
           .format('HH:mm');
 
 
-        // console.log('mouseRowPosY', mouseRowPosY);
-        // console.log("🚀 ~ onTimetableClick ~ intervals:", intervals)
-        // console.log("🚀 ~ onTimetableClick ~ findedInterval:", findedInterval)
-        // console.log("🚀 ~ onTimetableClick ~ mousePosInHourrrr:", mousePosInHour)
-
-
 
         const date = dayjs(timetableStart)
           .set('hours', 0)
           .set('minutes', 0)
           .add(col, 'day')
           .format("YYYY-MM-DD HH:mm:ss");
-
-
-
 
 
         /**
@@ -2029,6 +1981,13 @@ function Timetable({
         onTdClick(event, info);
       }
     }
+
+    if (mode == timetableMode.edit && !timetableStart) {
+
+      onTdClick(event, null);
+
+
+    }
   }
 
   console.log("🚀 ~ RowsintervalsObj:", RowsintervalsObj, specificTimeScaleByRows)
@@ -2091,5 +2050,8 @@ function Timetable({
     </div>
   );
 }
-export default memo(Timetable);
+export default memo(
+  Timetable);
+
+
 

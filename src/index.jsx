@@ -52,7 +52,11 @@ const router = createHashRouter([
   },
   {
     path: "/student/home", // home student
-    element: <Home />,
+    element: (
+      <ProtectedRoute>
+        <Home />
+      </ProtectedRoute>
+    ),
   },
   {
     path: "/student/timetable",
@@ -160,7 +164,7 @@ const router = createHashRouter([
     ),
   },
   {
-    path: "/coordinator/graphic/class/details",
+    path: "/coordinator/graphic/class/details/:classe_id/:classe_label",
     element: (
       <ProtectedRoute>
         <CoordinatorGraphicClassDetails />
@@ -221,7 +225,7 @@ const router = createHashRouter([
     ),
   },
   {
-    path: routeRegister.getRoute("coordinatoruserClassprofil") + "/:student_id",
+    path: routeRegister.getRoute("coordinatoruserClassprofil") + "/:student_id/:classe_label",
     element: (
       <ProtectedRoute>
         <CoordinatorUserClassProfil />

@@ -1,74 +1,105 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import SidebarCoordinator from '../../components/SidebarCoordinator';
 import Footer from '../../components/Footer';
 import dayjs from 'dayjs';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { FallbackContent } from '../../components/FallbackContent';
 import { useAxios } from '../../Providers/AxiosProvider';
+import Profile from '../../components/Profile';
 
 function UserClassProfilMissing() {
 
-  const { student_id } = useParams();
+  const { student_id, classe_label } = useParams();
 
-  const [studentsInfos, setStudentsInfos] = useState([]);
+  // const [studentsInfos, setStudentsInfos] = useState([]);
 
-  const [absences, setAbsences] = useState([]);
+  // const [absences, setAbsences] = useState([]);
 
   const { axios } = useAxios();
 
 
-  const [loading, setLoading] = useState(true);  // État de chargement
+  const { state } = useLocation();
+  console.log("🚀 ~ UserClassProfilMissing ~ state:", state)
 
+  const student = useRef(null);
 
-  function fetchStudentsInfos() {
-    console.log('fetch student Infos');
-    axios.get(`/student/${student_id}`)
-      .then(function (response) {
-
-        const studentsInfos = response.data;
-
-        setStudentsInfos((oldvalue) => [studentsInfos]);
-        setLoading(false);
-        console.log(studentsInfos);
-
-      })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-      });
+  if (state) {
+    student.current = state.student;
 
   }
 
-  function fetchStudentsAbsences() {
-    console.log('fetch student Absences');
 
-    axios.get(`/list/absences/student/${student_id}`)
-      .then(function (response) {
+  const [loading, setLoading] = useState(() => {
+    return state == null;
+  });  // État de chargement
+  console.log("🚀 ~ =useState ~ loading:", loading)
 
-        const absences = response.data;
 
-        setAbsences((oldvalue) => [absences]);
-        setLoading(false);
-        console.log("student's absences", absences);
+  // function fetchStudentsInfos() {
+  //   console.log('fetch student Infos');
+  //   axios.get(`/student/${student_id}`)
+  //     .then(function (response) {
 
+  //       const studentsInfos = response.data;
+
+  //       setStudentsInfos((oldvalue) => [studentsInfos]);
+  //       setLoading(false);
+  //       console.log(studentsInfos);
+
+  //     })
+  //     .catch(function (error) {
+  //       // handle error
+  //       console.log(error);
+  //     });
+
+  // }
+
+  // function fetchStudentsAbsences() {
+  //   console.log('fetch student Absences');
+
+  //   axios.get(`/list/absences/student/${student_id}`)
+  //     .then(function (response) {
+
+  //       const absences = response.data;
+
+  //       setAbsences((oldvalue) => [absences]);
+  //       setLoading(false);
+  //       console.log("student's absences", absences);
+
+  //     })
+  //     .catch(function (error) {
+  //       // handle error
+  //       console.log(error);
+  //     });
+
+  // }
+
+  useEffect(() => {
+    let controller;
+    controller = new AbortController();
+
+    if (!state) {
+      axios.get(`/user/${student_id}`, {
+        signal: controller.signal
       })
-      .catch(function (error) {
-        // handle error
-        console.log(error);
-      });
+        .then((response) => {
+          student.current = response.data;
+          console.log("🚀 ~ .then ~ student:", student.current)
+          setLoading(false);
+        })
 
-  }
+    }
 
-  useEffect(function () {
-
-    fetchStudentsInfos();
-    fetchStudentsAbsences();
+    return () => {
+      controller.abort()
+    }
 
 
   }, [])
 
-  console.log("student's absences after useeffect", absences);
+  console.log("🚀 ~ UserClassProfilMissing ~ student:", student.current)
+
 
   // if (absences[0]) {
 
@@ -92,14 +123,14 @@ function UserClassProfilMissing() {
   if (loading) return <FallbackContent />;
 
 
-  if (absences[0]) 
-    return (
+  return (
     <div className='div-container d-flex flex-column'>
       <Navbar />
       <div className='body-content-container d-flex'>
         <SidebarCoordinator />
         <section className='content-container'>
-          <div className="">
+          <Profile student={student.current} classe_label={classe_label} />
+          {/* <div className="">
             <div className="col-md-12 mb-5 mt-3 ms-5">
               <div className='d-flex my-5'>
                 <img src="..." className="rounded-circle me-5" alt="..." />
@@ -189,7 +220,7 @@ function UserClassProfilMissing() {
 
 
             </div>
-          </div>
+          </div> */}
 
         </section>
       </div>

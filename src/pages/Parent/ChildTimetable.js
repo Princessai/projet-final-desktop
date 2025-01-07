@@ -90,21 +90,7 @@ function ChildTimetable() {
                         </div>
                         <div className="col-md-12 mb-5 d-flex justify-content-around">
                             <div className="col-md-8 d-flex justify-content-between">
-                                {/* <Link to={routeRegister.getRoute('coordinatorTimetableClassPastimetable')}>
-                            <button type="button" className="btn btn-danger">Current Timetable</button>
-                        </Link> */}
-
-                                {/* <Link>
-                                    <button type="button" className="btn btn-danger m-2 active">Current Timetable</button>
-                                </Link >
-                                <Link to={'/coordinator/timetable/class/pastimetable'}>
-                                    <button type="button" className="btn btn-danger m-2">Past Timetable</button>
-                                </Link >
-
-                                <Link to={'/coordinator/timetable/class/Upcomingimetable'}>
-                                    <button type="button" className="btn btn-danger m-2">Upcoming Timetable</button>
-                                </Link>
- */}
+                               
                             </div>
 
                         </div>
