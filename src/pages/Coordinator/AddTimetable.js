@@ -7,19 +7,19 @@ import Footer from '../../components/Footer';
 import '/src/pages/Presence/presence.css';
 import classes from './AddTimetable.module.css';
 import { Link, useParams } from 'react-router-dom';
-import TextField from '@mui/material/TextField';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import dayjs from 'dayjs';
 import isoWeek from 'dayjs/plugin/isoWeek';
 import { MobileTimePicker, renderTimeViewClock, TimePicker } from '@mui/x-date-pickers';
-import { FormControl, InputLabel, ListSubheader, MenuItem, Select } from '@mui/material';
+import { FormControl, InputLabel, ListSubheader, MenuItem, Select, TextField } from '@mui/material';
 import { useAuth } from '../../Providers/AuthProvider';
 import { useAxios } from '../../Providers/AxiosProvider';
 import { FallbackContent } from '../../components/FallbackContent';
 import { throttle, debounce } from "/utilities/debounce_throttle";
 import { HiReceiptRefund } from 'react-icons/hi';
 import { Delete } from '@mui/icons-material';
-
+import * as yup from "yup";
+import { Box, Snackbar } from '@mui/material';
 
 
 const theme = createTheme({
@@ -49,6 +49,48 @@ const theme = createTheme({
 });
 
 dayjs.extend(isoWeek);
+
+
+const emptyStringMessage = 'This field cannot be empty'
+
+const objectSchema = yup.object({
+
+    etat: yup.number().required(),
+    date: yup.string().required(),
+    attendance: yup.number().required(),
+    "heure_debut": yup.string().trim().min(2, emptyStringMessage).required(),
+    "heure_fin": yup.string().trim().min(2, emptyStringMessage).required(),
+    "duree": yup.number().required(),
+    "duree_raw": yup.number().required(),
+    annee_id: yup.number().required(),
+
+    "salle": yup.object({
+        // "id": 11,
+        "label": yup.string().trim().min(2, emptyStringMessage).required()
+    }),
+    "module": yup.object({
+        // "id": 2,
+        "label": yup.string().trim().min(2, emptyStringMessage).required()
+    }),
+    "manager": yup.object({
+        // "id": 17,
+        "name": yup.string().required().trim().min(2, emptyStringMessage),
+        "lastname": yup.string().required().trim().min(2, emptyStringMessage)
+    }),
+
+    "type_seance": yup.object({
+        // "id": 1,
+        "label": yup.string().trim().min(2, emptyStringMessage).required()
+    })
+});
+
+
+
+const arraySchema = yup.array()
+    .of(objectSchema)
+    .min(1, 'At least one seance is required')
+    .required('seance is required');
+
 
 function isValidDate(value) {
 
@@ -81,7 +123,7 @@ function derivedMaxDate(timetableStart, weekStart) {
 
 function AddTimetable() {
     console.log('AddTimetable')
-    const { isUserAuthenticated } = useAuth();
+    const { isUserAuthenticated, currentYear } = useAuth();
     const { axios } = useAxios();
 
     const [loading, setLoading] = useState(true);  // État de chargement
@@ -94,17 +136,33 @@ function AddTimetable() {
 
     const [breaks, setBreaks] = useState([]);
     const [seances, setSeances] = useState([]);
-    console.log("🚀 ~ AddTimetable ~ seances:", seances)
+    const [responseMessage, setResponseMessage] = useState([]);
     const [timetableStart, setTimetableStart] = useState(null);
     const [timetableEnd, setTimetableEnd] = useState(null);
-    const [timetableStep, setTimetableStep] = useState('02:35')
+    const [timetableStep, setTimetableStep] = useState('01:00')
     const stepInHour = convertTimeStringToHour(timetableStep).totalHour;
     const [timetableEndHour, setTimetableEndHour] = useState('17:00');
-    const [timetableStartHour, setTimetableStartHour] = useState('09:30');
+    const [timetableStartHour, setTimetableStartHour] = useState('09:00');
     const timetableEndHourTimeObj = convertTimeStringToHour(timetableEndHour);
     const timetableStartHourTimeObj = convertTimeStringToHour(timetableStartHour);
     const timetableEndHourInhour = timetableEndHourTimeObj.totalHour;
     const timetableStartHourInhour = timetableStartHourTimeObj.totalHour;
+
+
+
+
+    const [snackBar, setSnackBar] = useState({
+        open: false ,
+        vertical: 'top',
+        horizontal: 'center',
+    });
+
+    const { vertical, horizontal, open } = snackBar
+
+    const handleClose = () => {
+        setSnackBar({ ...snackBar, open: false });
+    };
+
 
 
 
@@ -167,6 +225,8 @@ function AddTimetable() {
     const coordinators = useRef([]);
     const typeseances = useRef([]);
     const rooms = useRef([]);
+    const commentsRef = useRef(null);
+
     const [hasFocus, setHasFocus] = useState(false);
 
     const datacol = useRef([]);
@@ -189,6 +249,7 @@ function AddTimetable() {
     const [selectedElementEndHour, setSelectedElementEndHour] = useState(null);
 
     const [timetableErrors, setTimetableErrors] = useState(null);
+    const [seanceErrors, setSeanceErrors] = useState(null)
 
     const hasSelectedElement = selectedElement != null;
 
@@ -221,7 +282,7 @@ function AddTimetable() {
             name: '',
             lastname: ''
         },
-        annee_id: 1
+        annee_id: currentYear.id
     }
 
 
@@ -233,6 +294,31 @@ function AddTimetable() {
     let startHourMin = null;
     let endHourMax = null;
     let endHourMin = null;
+    const isInvalid = seanceErrors?.[currentIndex.current] != undefined;
+    let currentseanceErrors = seanceErrors?.[currentIndex.current];
+
+    let moduleError = null;
+    let managerError = null;
+    let typeSeanceError = null;
+    let roomError = null;
+
+    if (isInvalid) {
+        moduleError = currentseanceErrors?.module?.errors?.label?.[0];
+        managerError = currentseanceErrors?.manager?.errors?.name?.[0];
+        typeSeanceError = currentseanceErrors?.type_seance?.errors?.label?.[0];
+        roomError = currentseanceErrors?.salle?.errors?.label?.[0];
+
+    }
+
+    console.log("🚀 ~ AddTimetable ~ currentseanceErrors:", currentseanceErrors)
+
+    console.log("🚀 ~ AddTimetable ~ moduleError:", moduleError)
+
+    console.log("🚀 ~ AddTimetable ~ managerError:", managerError)
+
+    console.log("🚀 ~ AddTimetable ~ typeSeanceError:", typeSeanceError)
+
+    console.log("🚀 ~ AddTimetable ~ roomError:", roomError)
 
 
     if (currentStartHour) {
@@ -286,9 +372,171 @@ function AddTimetable() {
     const selectedTypeseance = typeseances.current.find((typeseance) => {
         return typeseance.id == selectedElementTypeseance;
     })
-    const isPresentiel = selectedTypeseance?.label == 'presentiel'
+    let isPresentiel = selectedTypeseance?.label == 'presentiel'
 
-    const derivedClasseManager = isPresentiel ? classeTeachers.current : [classeCoordinator.current];
+    let derivedClasseManager;
+
+    if (isPresentiel) {
+        derivedClasseManager = classeTeachers.current
+        // teacherChange(derivedClasseManager.id)
+    } else {
+        derivedClasseManager = [classeCoordinator.current];
+    }
+
+    function insertTimetable(data){
+        axios.post('/timetable', data)
+        .then((response)=>{
+            console.log(response.message);
+            setSeances([]);
+            commentsRef.current.value = '';
+            reset();
+            setResponseMessage(response.message)
+           
+                setSnackBar({ ...snackBar, open: true });
+
+                let timer = setTimeout(() => {
+
+                    handleClose();
+                    clearTimeout(timer);       
+        
+                }, 5000);               
+            
+        })
+        .catch((error)=>{
+            console.error(error);
+        })
+    }
+
+
+    function OnTimetableSave(data) {
+        let errors
+
+        try {
+            errors = null
+            errors = arraySchema.validateSync(data, { abortEarly: false });
+
+            let request = {};
+            let commentaire = commentsRef.current.value.trim();
+
+
+            if (commentaire == '') commentaire = null;
+
+
+            const timetable = {
+                "date_debut": timetableStart,
+                "date_fin": timetableEnd,
+                "classe_id": classe_id,
+                "annee_id": currentYear.id,
+                "commentaire": commentaire
+            }
+
+
+            console.log('seancesss', seances);
+
+            const requestSeances = seances.map((seance) => {
+                return {
+                    date: currentDate,
+                    heure_debut: seance.heure_debut,
+                    heure_fin: seance.heure_fin,
+                    salle_id: seance.salle.id,
+                    module_id: seance.module.id,
+                    user_id: seance.manager.id,
+                    type_seance_id: seance.type_seance.id,
+                    annee_id: currentYear.id
+                }
+            })
+
+            console.log('requestSeances',requestSeances);
+
+            const requestObj = {
+                timetable: timetable,
+                seances: requestSeances
+            
+            }
+
+            insertTimetable(requestObj);
+
+
+        } catch (error) {
+            console.log('try', error)
+            if (error instanceof yup.ValidationError) {
+                const validationErrors = {}
+                console.error(error, error.inner)
+                error.inner.forEach(eacherror => {
+
+                    if (eacherror.path) {
+                        console.log('________eacherror.path_____', eacherror.path)
+                        const splitValues = eacherror.path.split('.');
+                        console.log(splitValues)
+                        const indexString = splitValues[0];
+                        const regex = /(?<=\[)\d+(?=])/
+                        const index = indexString.match(regex)[0];
+                        console.log(indexString, index);
+
+                        if (!validationErrors[index]) {
+                            validationErrors[index] = { errors: {} }
+                        }
+                        let nextObj = validationErrors[index];
+                        const currentProps = [];
+
+
+
+                        if (splitValues.length >= 3) {
+
+
+                            splitValues.forEach((key, splitIndex) => {
+                                if (splitIndex == 0) return;
+                                currentProps.push(key);
+
+
+                                if (splitIndex <= splitValues.length - 2) {
+
+                                    console.log("🚀 ~ splitValues.forEach ~ key:", key)
+
+
+                                    if (!nextObj[key]) {
+                                        nextObj[key] = { errors: {} }
+                                        nextObj = nextObj[key];
+
+                                    } else {
+                                        nextObj = nextObj[key]
+                                    }
+                                }
+
+                                if (splitIndex == splitValues.length - 2) {
+                                    if (!nextObj.errors[splitValues[splitValues.length - 1]]) {
+                                        nextObj.errors[splitValues[splitValues.length - 1]] = [];
+                                    }
+
+
+                                    nextObj.errors[splitValues[splitValues.length - 1]].push(eacherror.message)
+
+                                }
+
+                            })
+                        }
+
+                    }
+                });
+
+                errors = validationErrors // Array of error messages
+
+                setSeanceErrors(validationErrors);
+            }
+        }
+        console.log('OnTimetableSave', errors)
+    }
+
+    function deleteSeance(){
+        setSeances((oldSeances)=>{
+           return oldSeances.filter((oldSeance, index)=>{
+            console.log('setSeancessss',oldSeance, currentIndex.current, oldSeance.id != currentIndex.current)
+                return index != currentIndex.current;
+            })
+        })
+    }
+
+
     function reset() {
         setSelectedElementManager('');
         setSelectedElementModule('');
@@ -309,8 +557,6 @@ function AddTimetable() {
             return
         }
 
-
-        console.log("🚀 ~ onTdFocus ~ info:", info)
         const upperSeance = info.upperSeance
         const hasPseudoRows = info.hasPseudoRows;
 
@@ -398,7 +644,6 @@ function AddTimetable() {
 
         }
 
-
     }
 
     function setNewSeanceInitValue(newSeance, defaultValue) {
@@ -425,8 +670,6 @@ function AddTimetable() {
 
         duree_raw = heure_fin.diff(heure_debut, 'hours', true);
         duree = roundUpToStep(duree_raw, 1);
-
-
 
         newSeance.heure_debut = heure_debut.format('YYYY-MM-DD HH:mm:ss');
         newSeance.heure_fin = heure_fin.format('YYYY-MM-DD HH:mm:ss');
@@ -458,9 +701,8 @@ function AddTimetable() {
         return false;
     }
 
+
     function dateChange(date, context) {
-        console.log("🚀 ~ dateChange ~ date:", date)
-        console.log("🚀 ~ dateChange ~ context:", context)
         if (context.validationError == 'invalidDate') {
 
             console.log('_invalidDate', currentDate)
@@ -513,19 +755,7 @@ function AddTimetable() {
 
             changeSeanceProp(currentIndex.current, props)
 
-            // setSeances((oldValues) => {
-            //     const seances = oldValues.map((seance, index) => {
-            //         if (index == currentIndex.current) {
-            //             seance.date = date.format('YYYY-MM-DD HH:mm:ss');
-            //             if (derivedCurrentStartHour) {
-            //                 seance.heure_debut = derivedCurrentStartHour
-            //             }
-            //         }
-            //         return seance
-            //     })
-
-            //     return seances
-            // })
+            
         }
 
 
@@ -533,7 +763,6 @@ function AddTimetable() {
 
     }
     function timePickerErrorSetter(context, inputName) {
-        console.log("🚀 ~ timePickerErrorSetter ~ context:", context)
         if (context.validationError) {
             setTimetableErrors((oldErrors) => {
                 let newErrors
@@ -667,8 +896,6 @@ function AddTimetable() {
 
             // if(!isOverlapsing){
             // }setSeance
-            console.log("🚀 ~ endHourChange ~ value:", endHour)
-
             setSeances((oldValues) => {
                 const newSeance = initialSeance
                 // setNewSeanceInitValue(newSeance);
@@ -746,29 +973,31 @@ function AddTimetable() {
             })
         }
     }
-    function teacherChange(event) {
-        setSelectedElementManager(event.target.value);
+    function teacherChange(id) {
+        setSelectedElementManager(id);
+        console.log('teacher________change', isPresentiel);
         let findedTeacher;
         if (isPresentiel) {
             findedTeacher = classeTeachers.current.find((teacher) => {
-                return teacher.id == event.target.value;
+                return teacher.id == id;
             })
 
         } else {
             findedTeacher = classeCoordinator.current;
+            console.log("🚀 ~ teacherChange ~ classeCoordinator.current:", classeCoordinator.current)
         }
 
 
-        if (!findedTeacher) {
+
+        if (isPresentiel && !findedTeacher) {
             findedTeacher = teachers.current.find((teacher) => {
-                return teacher.id == event.target.value;
+                return teacher.id == id;
             })
         }
-        console.log("🚀 ~ findedteacher=teachers.find ~ findedteacher:", findedTeacher)
+
+        console.log('findedteacheeerr', findedTeacher)
 
         if (!seances[currentIndex.current]) {
-
-
 
             setSeances((oldValues) => {
 
@@ -794,6 +1023,8 @@ function AddTimetable() {
         }
     }
 
+
+
     function roomChange(event) {
 
         setSelectedElementSalle(event.target.value);
@@ -801,9 +1032,6 @@ function AddTimetable() {
         const findedRoom = rooms.current.find((room) => {
             return room.id == event.target.value;
         })
-
-        console.log("🚀 ~ findedteacher=rooms.find ~ findedteacher:", findedRoom)
-
         if (!seances[currentIndex.current]) {
 
 
@@ -830,15 +1058,20 @@ function AddTimetable() {
             });
         }
     }
-    function typeSeanceChange(event) {
 
+
+    function typeSeanceChange(event) {
 
 
         const findedTypeseance = typeseances.current.find((room) => {
             return room.id == event.target.value;
         })
         if (findedTypeseance?.label != 'presentiel') {
-            setSelectedElementManager(classeCoordinator.current.id);
+            // setSelectedElementManager(classeCoordinator.current.id);
+            isPresentiel = false;
+            console.log('ispresentiel', isPresentiel)
+
+            teacherChange(classeCoordinator.current.id)
         } else {
             setSelectedElementManager("");
 
@@ -938,10 +1171,29 @@ function AddTimetable() {
                         <div className="col-md-12 mb-4 mt-3 ps-5">
                             <h1 className='py-3'>New timetable for {classe_label}</h1>
                         </div>
-                        <div className="col-md-12 mb-5 d-flex">
+                        <Box sx={{ width: 500 }}>
+                        <Snackbar
+                            sx={{
+                                '& .MuiSnackbarContent-root': {
+                                    backgroundColor: '#4caf50', // Set your background color
+                                    color: '#000',          // Set text color
+                                },
+                            }}
+                            anchorOrigin={{ vertical, horizontal }}
+                            open={open}
+                            message={responseMessage}
+                            key={vertical + horizontal}
+                        />
+                    </Box>
 
-                        </div>
                         <div className="col-md-12">
+
+                            <div className='d-flex justify-content-end pe-3'>
+                                 <button type="button" className="btn btn-success" onClick={() => {
+                                OnTimetableSave(seances)
+                            }}>Save</button>
+                            </div>
+                           
 
                             <div className='mx-5'>
                                 {
@@ -1004,11 +1256,23 @@ function AddTimetable() {
                                     onError={onError}
                                     timetableStartHour={timetableStartHour}
                                     timetableEndHour={timetableEndHour}
+                                    timeTableErrors={seanceErrors}
                                 />
 
-                                <div>
-                                    <p className='text-center text-danger fw-bold text-decoration-underline'>
-                                        NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
+                                <div className='my-3'>
+                                    <TextField
+                                        inputRef={commentsRef}
+                                        name='comments'
+                                        fullWidth
+                                        label="Comments..."
+                                        variant="outlined"
+                                        margin="normal"
+                                        multiline
+                                        rows={2} // Specify the number of visible rows
+                                        defaultValue={''}
+
+                                    />
+
                                 </div>
                             </div>
 
@@ -1023,6 +1287,7 @@ function AddTimetable() {
                         <ThemeProvider theme={theme}>
 
                             <div className='dataPickerContainer w-100'>
+                                <div></div>
                                 <DatePicker
                                     key='day'
                                     label="Day"
@@ -1083,7 +1348,6 @@ function AddTimetable() {
 
 
                                                 if (timetableErrors?.startHour) {
-                                                    console.log("🚀 ~ AddTimetable ~ timetableErrors?.startHour:", timetableErrors?.startHour)
                                                     const derivedStartHourMax = dayjs(currentDate)
                                                         .set('hour', startHourMax.hour())
                                                         .set('minute', startHourMax.minute())
@@ -1179,7 +1443,6 @@ function AddTimetable() {
 
 
                                                 if (timetableErrors?.endHour) {
-                                                    console.log("🚀 ~ AddTimetable ~ timetableErrors?.endHour:", timetableErrors?.endHour)
                                                     const derivedEndHourMax = dayjs(currentDate)
                                                         .set('hour', endHourMax.hour())
                                                         .set('minute', endHourMax.minute())
@@ -1212,9 +1475,6 @@ function AddTimetable() {
                                                             { name: 'heure_fin', value: value.format('YYYY-MM-DD HH:mm:ss') },
                                                             { name: 'duree_raw', value: duree_raw },
                                                             { name: 'duree', value: duree }];
-
-                                                        console.log("🚀 ~ AddTimetable ~ currentIndex.current:", currentIndex.current)
-
                                                         if (seances[currentIndex.current]) {
                                                             changeSeanceProp(currentIndex.current, defaultValue);
 
@@ -1227,8 +1487,6 @@ function AddTimetable() {
 
                                                         setSelectedElementEndHour(value);
 
-
-                                                        console.log("🚀 ~ AddTimetable ~ value.format('YYYY-MM-DD HH:mm:ss'):", value.format('YYYY-MM-DD HH:mm:ss'))
                                                     }
 
                                                     removeTimePickerError()
@@ -1239,10 +1497,42 @@ function AddTimetable() {
                                     }}
                                 />
                             </div>
+                            <div>
+                                {typeSeanceError &&
+                                    <div className={`text-danger fontSize ${classes.fontSize} `}>{typeSeanceError}</div>
+                                }
+                                <FormControl sx={{ width: '100%' }} size="small">
+
+
+                                    <InputLabel id="demo-simple-select-label">Session type</InputLabel>
+                                    <Select
+                                        id="demo-simple-select"
+                                        labelId="demo-simple-select-label"
+                                        label="Session type"
+                                        value={selectedElementTypeseance}
+                                        onChange={typeSeanceChange}
+                                        disabled={isAllInputsDisabled}
+                                    >
+                                        {typeseances.current.map((typeseance) => (
+                                            <MenuItem
+                                                key={typeseance.id}
+                                                value={typeseance.id}
+                                            >
+                                                {typeseance.label}
+                                            </MenuItem>
+                                        ))}
+
+                                    </Select>
+                                </FormControl>
+                            </div>
+
 
                             <div>
-
+                                {moduleError &&
+                                    <div className={`text-danger fontSize ${classes.fontSize} `}>{moduleError}</div>
+                                }
                                 <FormControl sx={{ width: '100%' }} size='small'>
+
                                     <InputLabel htmlFor="grouped-select">Module</InputLabel>
                                     <Select
                                         id="grouped-select"
@@ -1278,15 +1568,21 @@ function AddTimetable() {
                                 </FormControl>
                             </div>
                             <div>
-
+                                {managerError &&
+                                    <div className={`text-danger fontSize ${classes.fontSize} `}>{managerError}</div>
+                                }
                                 <FormControl sx={{ width: '100%' }} size='small'>
+
                                     <InputLabel htmlFor="grouped-select">Teacher</InputLabel>
                                     <Select
                                         id="grouped-select"
                                         label="teacher"
                                         value={selectedElementManager}
                                         disabled={isAllInputsDisabled}
-                                        onChange={teacherChange}
+                                        onChange={(e) => {
+                                            teacherChange(e.target.value)
+                                        }}
+
                                     >
 
                                         <ListSubheader>Class' teachers</ListSubheader>
@@ -1317,29 +1613,9 @@ function AddTimetable() {
 
                             </div>
                             <div>
-                                <FormControl sx={{ width: '100%' }} size="small">
-                                    <InputLabel id="demo-simple-select-label">Session type</InputLabel>
-                                    <Select
-                                        id="demo-simple-select"
-                                        labelId="demo-simple-select-label"
-                                        label="Session type"
-                                        value={selectedElementTypeseance}
-                                        onChange={typeSeanceChange}
-                                        disabled={isAllInputsDisabled}
-                                    >
-                                        {typeseances.current.map((typeseance) => (
-                                            <MenuItem
-                                                key={typeseance.id}
-                                                value={typeseance.id}
-                                            >
-                                                {typeseance.label}
-                                            </MenuItem>
-                                        ))}
-
-                                    </Select>
-                                </FormControl>
-                            </div>
-                            <div>
+                                {roomError &&
+                                    <div className={`text-danger fontSize ${classes.fontSize} `}>{roomError}</div>
+                                }
                                 <FormControl sx={{ width: '100%' }} size="small" >
                                     <InputLabel id="demo-simple-select-label">Room</InputLabel>
                                     <Select
@@ -1365,9 +1641,11 @@ function AddTimetable() {
 
                         </ThemeProvider>
 
-                        <div className="d-flex justify-content-between" >
-                            <Delete />
-                            <button type="button" className="btn btn-success">Add</button>
+                        <div className="d-flex justify-content-end" >
+                            <Delete
+                            onClick={deleteSeance}
+                             />
+
                         </div>
 
                     </div>

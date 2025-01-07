@@ -24,7 +24,7 @@ export const sessiontype = {
 dayjs.extend(isoWeek);
 let isWaitingGlobal = true;
 let currentTimetableMode;
-
+let globalTimetableErrors;
 export function convertTimeStringToHour(timeString) {
 
   let timeStringHour
@@ -218,10 +218,17 @@ function TimetableTd({
   const salle = seance?.salle?.label;
   const seanceStart = dayjs(seance.heure_debut).format('HH:mm')
   const seanceEnd = dayjs(seance.heure_fin).format('HH:mm')
+  const isOnErrorState = globalTimetableErrors?.[index] != undefined;
+
+  console.log("🚀 ~ UNE GROSSE CONSOLE", isOnErrorState, globalTimetableErrors)
+
+
+  
+
 
   return (
     <div
-      className={`${classes.td} ${classes.timetable_td}`}
+      className={`${classes.td} ${classes.timetable_td} class ${isOnErrorState ? classes.invalidTd : ''}`}
       ref={tdRef}
       style={style}
       data-col={columnNumber}
@@ -243,13 +250,7 @@ function TimetableTd({
   );
 }
 
-// function onTdFocus(event, info) {
-//   console.log('onTdFocus')
-//   console.log(info);
 
-
-
-// }
 
 const timetableSchema = yup.object().shape({
   timetableStart: yup.string().required(),
@@ -294,13 +295,18 @@ function Timetable({
   timetableStep = '01:00',
   onError,
   timetableStartHour = '09:00',
-  timetableEndHour = '17:00'
+  timetableEndHour = '17:00',
+  timeTableErrors
 }) {
   console.log("🚀 ~ seances:", seances)
   const props = arguments[0];
   const specificTimeScaleByRows = {}
   const RowsintervalsObj = {}
- 
+
+
+  if (timeTableErrors) {
+    globalTimetableErrors = timeTableErrors;
+  }
 
   useEffect(() => {
     validateData({
@@ -308,7 +314,7 @@ function Timetable({
       timetableEnd,
     })
 
-    if(onError)onError(errors);
+    if (onError) onError(errors);
 
   }, [timetableStart, timetableEnd])
 
@@ -426,6 +432,7 @@ function Timetable({
       window.removeEventListener("resize", onScreenResizeDecorator);
 
       currentTimetableMode = null;
+      globalTimetableErrors = null;
     };
   }, []);
 
@@ -1158,8 +1165,8 @@ function Timetable({
         )
         let isEndingAtBreak = false
         let isStartingAtBreak = false
-        let EndingAtBreak 
-         timetableALLBreaks.forEach((timetableBreak, index) => {
+        let EndingAtBreak
+        timetableALLBreaks.forEach((timetableBreak, index) => {
           if (timetableBreak.debut == seanceEnd.format("HH:mm")) {
             isEndingAtBreak = true;
             EndingAtBreak = index;
@@ -1250,10 +1257,10 @@ function Timetable({
           if (isEndingAtBreak) {
             const currentBreak = timetableALLBreaks[EndingAtBreak]
             console.log("🚀 ~ onTdCreate ~ currentBreak:", currentBreak)
-            
+
             console.log("🚀 ~ isNotBreaksInTopLine=breaksNotInTopLine.findIndex ~ breaksNotInTopLine:", breaksNotInTopLine)
             isNotBreaksInTopLine = breaksNotInTopLine.findIndex((BreakObj) => {
-              console.log('BreakObj',BreakObj, BreakObj?.name, currentBreak?.name)
+              console.log('BreakObj', BreakObj, BreakObj?.name, currentBreak?.name)
               return BreakObj.name == currentBreak.name && BreakObj.debut == currentBreak.debut;
             }) !== -1
 
@@ -1355,7 +1362,7 @@ function Timetable({
 
             if (rowNumber == lastRowNumber) {
 
-              console.log('last row reinitilize lastRowHeight ',lastRowHeight,rowHeight)
+              console.log('last row reinitilize lastRowHeight ', lastRowHeight, rowHeight)
               trRef.style.height = lastRowHeight + "px";
             } else {
               console.log('last row reinitilize')
@@ -1602,7 +1609,7 @@ function Timetable({
 
       // lastRowHeight += 'px';
 
-      trHeight = lastRowHeight +'px';
+      trHeight = lastRowHeight + 'px';
 
 
 

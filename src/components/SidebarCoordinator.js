@@ -13,7 +13,7 @@ function SidebarCoordinator() {
                
     return (
         <aside className='side-container container m-0'>
-            <div className='side-bar d-flex flex-column align-items-center justify-content-center'>
+            <div className='side-bar d-flex flex-column align-items-center justify-content-around'>
                 <Button label={'Timetable'} linkto={routeRegister.getRoute("coordinatorhome")}/>
                 <Button label={'Classes'} linkto={'/coordinator/classes'}/>
                 <Button label={'Graphic'} linkto={'/coordinator/graphic'}/>

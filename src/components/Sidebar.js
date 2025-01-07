@@ -9,7 +9,7 @@ function Sidebar() {
     
     return (
         <aside className='side-container container m-0'>
-            <div className='side-bar d-flex flex-column align-items-center justify-content-center'>
+            <div className='side-bar d-flex flex-column align-items-center justify-content-around'>
                 <Button label={'Home'} linkto={'/student/home'} />
                 <Button label={'Timetable'} linkto={'/student/timetable'} />
                 <Button label={'Profil'} linkto={'/student/profil'} />

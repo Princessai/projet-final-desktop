@@ -24,7 +24,7 @@ function SideBarParent() {
     }
     return (
         <aside className='side-container container m-0'>
-            <div className='side-bar d-flex flex-column align-items-center justify-content-center'>
+            <div className='side-bar d-flex flex-column align-items-center justify-content-around'>
                 <Button label={'Student Profile'} linkto={`/parent/child/profil/${user_id}`}/>
                 <Button label={'Timetable'} linkto={`/parent/child/timetable/${classe_id}/${classe_label}`}/>
                 <div className='flex-end'>
