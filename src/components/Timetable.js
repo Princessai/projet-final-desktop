@@ -223,7 +223,7 @@ function TimetableTd({
   console.log("🚀 ~ UNE GROSSE CONSOLE", isOnErrorState, globalTimetableErrors)
 
 
-  
+
 
 
   return (
@@ -330,6 +330,7 @@ function Timetable({
 
   const tdRefsobj = {};
   const modifiedTrsObj = {};
+  const modifiedTrRef = {}
   let prevHeightDiff = 0;
   const tdOverflowPadding = 20;
   let prevBreakHeightDiff = 0;
@@ -578,6 +579,22 @@ function Timetable({
 
   });
 
+
+
+  useMemo(function () {
+    if (seances) {
+      Object.keys(modifiedTrRef).forEach((rowNumber) => {
+        if (rowNumber == lastRowNumber) {
+          if (modifiedTrRef[rowNumber].style.height != lastRowHeight + 'px') modifiedTrRef[rowNumber] = lastRowHeight + 'px'
+        } else {
+          if (modifiedTrRef[rowNumber].style.height != rowHeight + 'px') modifiedTrRef[rowNumber] = rowHeight + 'px'
+        }
+
+      })
+    }
+
+  }, [seances])
+
   const [borderWidth, setBorderWidth] = useState(border);
   const timetableHeight = height;
   const borderStyle = `solid ${borderWidth / 2}px black`;
@@ -793,6 +810,7 @@ function Timetable({
     let isBreakRowFull = false;
     const matchingBreaksIndexes = [];
     let timeTableBreaksCounter = -1;
+
     for (let breakIndex = 0; breakIndex < timetableALLBreaks.length;) {
       const timeTablebreak = timetableALLBreaks[breakIndex];
 
@@ -923,6 +941,7 @@ function Timetable({
     });
 
     const rowSeanceStartArr = [];
+
     for (let dayCount = 0; dayCount <= maxDay;) {
       const key = `day_${dayCount}_${hoursSteps}`;
 
@@ -1244,7 +1263,6 @@ function Timetable({
 
         function onTdCreate(tdRef, props) {
 
-
           const { hoursSteps: tdHoursSteps, columnNumber, rowNumber, tdNumber, hasRunOnce, seance, isEndingAtBreak } =
             props;
           console.log("______td created_______");
@@ -1258,7 +1276,7 @@ function Timetable({
             const currentBreak = timetableALLBreaks[EndingAtBreak]
             console.log("🚀 ~ onTdCreate ~ currentBreak:", currentBreak)
 
-            console.log("🚀 ~ isNotBreaksInTopLine=breaksNotInTopLine.findIndex ~ breaksNotInTopLine:", breaksNotInTopLine)
+            console.log("🚀 ~ isNotBreaksInTopLineè=breaksNotInTopLine.findIndex ~ breaksNotInTopLine:", breaksNotInTopLine)
             isNotBreaksInTopLine = breaksNotInTopLine.findIndex((BreakObj) => {
               console.log('BreakObj', BreakObj, BreakObj?.name, currentBreak?.name)
               return BreakObj.name == currentBreak.name && BreakObj.debut == currentBreak.debut;
@@ -1328,6 +1346,7 @@ function Timetable({
                 oldTrRef.getBoundingClientRect().height + prevHeightDiff + "px";
               console.log("🚀 ~ onTdCreate ~ oldTrRef.style.height:", oldTrRef, oldTrRef.style.height, prevHeightDiff)
               console.log(prevRowNumber)
+              modifiedTrRef[prevRowNumber] = oldTrRef;
               modifiedTrsObj[prevRowNumber] = prevHeightDiff;
             }
 
@@ -1356,16 +1375,16 @@ function Timetable({
               prevHeightDiff = heightDiff;
             }
           }
-
-          if (tdNumber == tdCount && hasRunOnce) {
+          console.log(tdNumber, tdCount, hasRunOnce)
+          if (tdNumber == tdCount) {
             console.log('td create last row height', trRef, lastRowHeight, prevHeightDiff)
 
-            if (rowNumber == lastRowNumber) {
+            if (rowNumber == lastRowNumber && trRef.style.height != lastRowHeight + "px") {
 
               console.log('last row reinitilize lastRowHeight ', lastRowHeight, rowHeight)
               trRef.style.height = lastRowHeight + "px";
-            } else {
-              console.log('last row reinitilize')
+            } else if (trRef.style.height != rowHeight + "px") {
+              console.log('last row reinitilize', rowHeight + "px")
               trRef.style.height = rowHeight + "px";
 
             }
@@ -1382,6 +1401,8 @@ function Timetable({
 
 
             trRef.style.height = trRef.getBoundingClientRect().height + prevHeightDiff + "px";
+            console.log('________modif',)
+            modifiedTrRef[rowNumber] = trRef;
             modifiedTrsObj[rowNumber] = prevHeightDiff;
           }
         }

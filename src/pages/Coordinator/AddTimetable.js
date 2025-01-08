@@ -150,6 +150,90 @@ function AddTimetable() {
 
 
 
+    
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+// function useTimetable(seances){
+//     const [timetableSeances, setTimetableSeances] = useState(seances)
+//     const timetableMounted = useRef(false);
+//     function setTimetableMounted(){
+//         timetableMounted.current = true;
+//     }
+
+   
+//     const useSeancesByDayArrRef = useRef();
+
+
+//     function orderSeancesByDay(seances){
+//         const seancesByDayArr = [];
+//         seances.forEach(function (seance, index) {
+//             const heure_debut = dayjs(seance.heure_debut);
+    
+//             const dayOfWeek = heure_debut.day();
+      
+//             const dayIndex = dayOfWeek - 1;
+      
+//             const seanceObj = { seance, index };
+//             if (seancesByDayArr[dayIndex]) {
+//               seancesByDayArr[dayIndex].push(seanceObj);
+//             } else {
+//               seancesByDayArr[dayIndex] = [seanceObj];
+//             }
+//           });
+//           useSeancesByDayArrRef.current = seancesByDayArr;
+//           return seancesByDayArr
+      
+//     }
+
+//     const timetableSettings = {
+//         setTimetableMounted,
+//         orderSeancesByDay
+//     };
+
+//     function addSeance(){
+
+//     }
+
+//     function setSeances(seances){
+//         orderSeancesByDay(seances)
+//     }
+
+
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const [snackBar, setSnackBar] = useState({
         open: false ,
@@ -170,6 +254,7 @@ function AddTimetable() {
     if (timetableStart == null && timetableEnd != null) {
         setTimetableStart(dayjs(timetableEnd).startOf('isoWeek').format('YYYY-MM-DD HH:mm:ss'))
     }
+
 
 
     function addSeance(newSeance) {
@@ -534,6 +619,7 @@ function AddTimetable() {
                 return index != currentIndex.current;
             })
         })
+        reset();
     }
 
 
@@ -545,6 +631,7 @@ function AddTimetable() {
         // setSelectedElementDate('');
 
         setSelectedElementEndHour(null);
+        currentIndex.current = null;
     }
 
 
@@ -803,11 +890,12 @@ function AddTimetable() {
 
 
 
-
         const derivedStartHour = dayjs(currentDate)
             .set('hour', startHour.hour())
             .set('minute', startHour.minute())
             .set('second', 0)
+
+            
 
         const startHourFormat = derivedStartHour.format('YYYY-MM-DD HH:mm:ss');
 
@@ -1320,21 +1408,14 @@ function AddTimetable() {
                                     ampm={false}
                                     value={currentStartHour === null ? null : dayjs(currentStartHour)}
                                     onChange={debounce(startHourChange)}
-                                    // minTime={timetableStartHour == null ? null : dayjs()
-                                    //     .set('hour', timetableStartHourTimeObj.timeStringHour)
-                                    //     .set('minute', timetableStartHourTimeObj.timeStringMinute)
-                                    //     .set('second', 0)}
+                                   
                                     minTime={startHourMin}
 
-                                    // maxTime={timetableEndHour == null ? null : dayjs()
-                                    //     .set('hour', timetableEndHourTimeObj.timeStringHour)
-                                    //     .set('minute', timetableEndHourTimeObj.timeStringMinute)
-                                    //     .set('second', 0)}
                                     maxTime={startHourMax}
                                     disabled={isAllInputsDisabled}
                                     onError={(error) => {
                                         console.log('errorStartHour')
-                                        // timePickerErrorSetter({validationError:error},'startHour')
+                                        
                                     }}
                                     onAccept={() => {
                                         removeTimePickerError()

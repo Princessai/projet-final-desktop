@@ -154,7 +154,7 @@ function Call() {
                             sx={{
                                 '& .MuiSnackbarContent-root': {
                                     backgroundColor: '#4caf50', // Set your background color
-                                    color: '#000',          // Set text color
+                                    color: 'white',          // Set text color
                                 },
                             }}
                             anchorOrigin={{ vertical, horizontal }}

@@ -20,7 +20,7 @@ function createSplash() {
     alwaysOnTop: true
   });
 
-  splashScreen.loadFile("./src/splashScreen.html");
+  splashScreen.loadFile(path.join(__dirname, 'src', 'splashScreen.html'));
   splashScreen.center();
 
 }
@@ -35,6 +35,7 @@ const createWindow = () => {
     webPreferences: {
       preload: MAIN_WINDOW_PRELOAD_WEBPACK_ENTRY,
     },
+    icon: path.join(__dirname, 'assets/favicon.ico')
   });
 
   // and load the index.html of the app.
@@ -44,15 +45,15 @@ const createWindow = () => {
   // mainWindow.webContents.openDevTools();
 
 
-  // mainWindow.once('ready-to-show', () => {
-  //   splashScreen.close();
-  //   mainWindow.show()
+  mainWindow.once('ready-to-show', () => {
+    splashScreen.close();
+    mainWindow.show()
 
-  //   if (process.env.NODE_ENV === "development") {
-  //     mainWindow.webContents.openDevTools();
+    // if (process.env.NODE_ENV === "development") {
+    //   mainWindow.webContents.openDevTools();
 
-  //   }
-  // });
+    // }
+  });
 
 
 };
@@ -67,7 +68,7 @@ app.whenReady().then(() => {
       createWindow();
     })
     .catch((err) => console.log('An error occurred: ', err));
-  // createSplash();
+  createSplash();
 
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.

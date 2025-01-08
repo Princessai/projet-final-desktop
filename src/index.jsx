@@ -44,6 +44,7 @@ import Modules from "./pages/Coordinator/Modules.js";
 import ChildProfilePage from "./pages/Parent/ChildProfilePage.js";
 import ChildTimetable from "./pages/Parent/ChildTimetable.js";
 import { ChildContextProvider } from "./Providers/ChildProvider.js";
+import SpecificTimetable from "./pages/Coordinator/SpecificTimetable.js";
 
 const router = createHashRouter([
   {
@@ -140,7 +141,7 @@ const router = createHashRouter([
   },
 
   {
-    path: routeRegister.getRoute("teacherSessionCall") + "/:seance_id",
+    path: routeRegister.getRoute("teacherSessionCall") + "/:mode/:seance_id/:seance_classe/:heure_debut/:heure_fin",
     element: (
       <ProtectedRoute>
         <Teachersessioncall />
@@ -241,6 +242,14 @@ const router = createHashRouter([
     element: (
       <ProtectedRoute>
         <CoordinatorCall />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: "/coordinator/specific-timetable/:timetable_id/:classe_label",
+    element: (
+      <ProtectedRoute>
+        <SpecificTimetable />
       </ProtectedRoute>
     ),
   },

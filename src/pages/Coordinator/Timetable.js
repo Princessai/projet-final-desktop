@@ -81,37 +81,6 @@ function TimetableCoordinator() {
 
                 })}
 
-                {/* <div className="card shadow w-25 m-3" >
-                  <img src="..." className="card-img-top" alt="..." />
-                  <Link to={'/coordinator/timetable/class'}>
-                    <div className="card-body">
-                      <p className="card-text"><strong>B3 DEV</strong> </p>
-                    </div>
-                  </Link>
-                </div> */}
-
-
-
-                {/* <div className="card shadow w-25 m-3" >
-                  <img src="..." className="card-img-top" alt="..." />
-                  <div className="card-body">
-                    <p className="card-text"><strong>B3 DEV</strong> </p>
-                  </div>
-                </div>
-
-                <div className="card shadow w-25 m-3" >
-                  <img src="..." className="card-img-top" alt="..." />
-                  <div className="card-body">
-                    <p className="card-text"><strong>B3 DEV</strong> </p>
-                  </div>
-                </div>
-
-                <div className="card shadow w-25 m-3" >
-                  <img src="..." className="card-img-top" alt="..." />
-                  <div className="card-body">
-                    <p className="card-text"><strong>B3 DEV</strong> </p>
-                  </div>
-                </div> */}
 
               </div>
             </div>

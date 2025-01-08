@@ -2,171 +2,693 @@ import React, { useEffect, useRef, useState } from 'react';
 import Navbar from '../../components/Navbar';
 import Footer from '../../components/Footer';
 import SidebarTeacher from '../../components/SidebarTeacher';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../../Providers/AuthProvider';
 import { FallbackContent } from '../../components/FallbackContent';
 import { useAxios } from '../../Providers/AxiosProvider';
 import '../../components/Navbar.css';
 import { useForm } from 'react-hook-form';
+import dayjs from 'dayjs';
 
 
 function TeachersessionCall() {
-
-  const { seance_id } = useParams();
+  const { mode, seance_id, seance_classe, heure_debut, heure_fin } = useParams();
 
   const { register, handleSubmit, formState, setValue, setError, clearErrors } = useForm();
 
+  let seanceStart = dayjs(heure_debut).format("HH:mm");
+  let seanceEnd = dayjs(heure_fin).format("HH:mm");
 
-  console.log('seance_id', seance_id)
 
   const attendanceFormRef = useRef();
-
+  const navigate = useNavigate();
 
   const [sessionStudents, setSessionStudents] = useState([]);
-  const [loading, setLoading] = useState(true);  // État de chargement
+
+  // const [responseMessage, setResponseMessage] = useState('');
+
+  const [loading, setLoading] = useState(true); // État de chargement
   const { axios } = useAxios();
 
+  const [selectedValue, setSelectedValue] = useState(null); // Stocke la valeur sélectionnée
+
+
+  const handleSelection = (value) => {
+    setSelectedValue(value); // Met à jour la valeur sélectionnée
+  };
 
   // const { currentYear } = useAuth();
 
-
-  function fetchSessionStudents() {
-    console.log('fetch sessionStudents');
-    axios.get(`/attendance-record/show/${seance_id}`)
+  function fetchStudentsAttendanceRecord() {
+    console.log("fetch sessionStudents");
+    axios
+      .get(`/attendance-record/${mode}/${seance_id}`)
       .then(function (response) {
-
         const sessionStudents = response.data;
 
         setSessionStudents((oldvalue) => sessionStudents);
         setLoading(false);
-        console.log('sessionStudents inn fetchh', sessionStudents);
-
+        console.log("sessionStudents inn fetchh", sessionStudents);
       })
       .catch(function (error) {
         // handle error
         console.log(error);
       });
-
-
   }
+
+  // function showClassAttendanceRecord(){}
 
 
   useEffect(function () {
+    fetchStudentsAttendanceRecord();
+  }, []);
 
-    fetchSessionStudents()
+  // if (mode == 'edit') {
+  //   sessionStudents.forEach((student)=>{
 
-
-  }, [])
-
-
+  //   })
+  // }
 
   if (loading) return <FallbackContent />;
 
-  console.log('sessionStudents', sessionStudents)
+  console.log("sessionStudents", sessionStudents);
 
   function onSubmit(data) {
+    console.log("dataaaa", data);
 
-    console.log('dataaaa', data)
+    const attendancesData = sessionStudents.map((student) => {
+      return {
+        id: student.id,
+        isDropped: student.isDropped,
+        status: data[`student_${student.id}`],
+      };
+    });
+    console.log('attendancesArray', attendancesData);
 
+
+    let action = mode == 'edit' ? 'update' : 'create';
+
+    axios
+      .post(`/attendance-record/${action}/${seance_id}`, { attendances: attendancesData })
+      .then((response) => {
+        console.log(response.message);
+        navigate('/teacher/home', {
+          state: response.message
+        });
+        
+      })
+      .catch((error) => {
+        console.error("Error making attendance:", error);
+      });
+
+    
+    
   }
 
   return (
-    <div className='div-container d-flex flex-column'>
+    <div className="div-container d-flex flex-column">
       <Navbar />
-      <div className='body-content-container d-flex'>
+      <div className="body-content-container d-flex">
         <SidebarTeacher />
-        <section className='content-container'>
-          <div className="row">
-            <div className="col-md-12 mt-3 ms-5">
-              <h1 className='py-3'>SESSION : 9h-12h</h1>
+        <section className="content-container">
+          <div className="m-3">
+            <div className="title-container col-md-12 mt-3 ms-3">
+              <p className="py-3 fs-3">
+                <span className="fw-bold">Session: </span>
+                {seanceStart}-{seanceEnd} {seance_classe}
+              </p>
             </div>
             <div className="col-md-12">
-
-              <form className=" d-flex flex-column" ref={attendanceFormRef} onSubmit={handleSubmit(onSubmit)} >
+              <form
+                className=" d-flex flex-column"
+                ref={attendanceFormRef}
+                onSubmit={handleSubmit(onSubmit)}
+              >
                 <div className="col-md-12 d-flex justify-content-end ">
-                  <button type="submit" className="btn btn-success me-5 mb-5">END SESSION</button>
+                  <button type="submit" className="btn btn-success me-5 mb-5">
+                    END SESSION
+                  </button>
                 </div>
 
-                <table className="table shadow m-3">
-                  <thead>
-                    <tr>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {
-                      sessionStudents.map(function (student, index) {
+                <div className="table shadow">
+                  <div>
+                    {sessionStudents.map(function (student, index) {
+                      let studentId = "student_" + student.id;
+                      setValue(studentId, student.attendanceStatus);
+                      console.log('student.attendanceStatus', student.attendanceStatus)
 
-                        let studentId = "student_" + student.id;
+                      return (
+                        <div
+                          className="d-flex align-items-center p-3"
+                          key={index}
+                        >
+                          <div className="fw-bold"> {index + 1}</div>
+                          <div className="d-flex justify-content-between align-items-center w-100 border-bottom">
+                            {/* <div className='picture-container'>
+                              <img src={student.picture} className='profile-picture ' />
+                            </div> */}
 
-                        // console.log('last',student.lastname)
-                        return <tr key={index}>
-                          <div className='picture-container'>
-                            <img src={student.picture} className='profile-picture' />
-                          </div>
-
-                          <td>
-                            <div className='picture-container'>
-                              <img src={student.picture} className='profile-picture ms-3' />
+                            <div colSpan="2">
+                              {student.name} {student.lastname}
                             </div>
-
-                          </td>
-                          <td colSpan="2">{student.name} {student.lastname}</td>
-                          <td className="d-flex justify-content-evenly">
-                            <input className="form-check-input" type="radio" defaultValue='1' id={"flexRadioDefault2" + student.id} {...register(studentId, { required: true })} />
-                            <label className="form-check-label" for={"flexRadioDefault2" + student.id}>
-                              present
-                            </label>
-
-                            <input className="form-check-input" type="radio" defaultValue='-1' id={"flexRadioDefault3" + student.id} {...register(studentId, { required: true })} />
-                            <label className="form-check-label" for={"flexRadioDefault3" + student.id}>
-                              absent
-                            </label>
-
-                            <input className="form-check-input" type="radio" defaultValue='0' id={"flexRadioDefault4" + student.id} {...register(studentId, { required: true })} />
-                            <label className="form-check-label" for={"flexRadioDefault4" + student.id}>
-                              retard
-                            </label>
+                            <div className="d-flex justify-content-between w-50 ">
 
 
-                          </td>
+                              <div>
+                                <label
+                                  className="form-check-label text-success fw-bold"
+                                  htmlFor={"flexRadioDefault2" + student.id}
+                                >
+                                  <input
+                                    className="form-check-input present me-2 border-success"
+                                    type="radio"
+                                    value="1"
+                                    defaultChecked={student.attendanceStatus == 1 ? true : false}
 
-                        </tr>
-
-
-                      })
-
-                    }
+                                    id={"flexRadioDefault2" + student.id}
+                                    {...register(studentId, { required: true })}
+                                  />
+                                  present
+                                </label>
+                              </div>
 
 
 
 
-                    {/* <tr>
-                    <th scope="row">1</th>
-                    <td colSpan="2">Mark</td>
-                    <td className="d-flex justify-content-evenly">
-                      <button type="button" className="btn btn-warning">Danger</button>
-                      <button type="button" className="btn btn-success">Danger</button>
-                      <button type="button" className="btn btn-danger">Danger</button>
-                    </td>
+                              <div>
+                                <label
+                                  className="form-check-label text-warning fw-bold"
+                                  htmlFor={"flexRadioDefault3" + student.id}
+                                >
+                                  <input
+                                    className="form-check-input late me-2 border-warning"
+                                    type="radio"
+                                    value="0"
+                                    defaultChecked={student.attendanceStatus == -1 ? true : false}
+                                    id={"flexRadioDefault3" + student.id}
+                                    {...register(studentId, { required: true })}
+                                  />
+                                  late
+                                </label>
+                              </div>
 
-                  </tr> */}
 
 
 
-                  </tbody>
-                </table>
+
+                              <div>
+                                <label
+                                  className="form-check-label text-danger fw-bold"
+                                  htmlFor={"flexRadioDefault4" + student.id}
+                                >
+                                  <input
+                                    className="form-check-input absent me-2 border-danger"
+                                    type="radio"
+                                    value="-1"
+                                    defaultChecked={student.attendanceStatus == 0 ? true : false}
+                                    id={"flexRadioDefault4" + student.id}
+                                    {...register(studentId, { required: true })}
+                                  />
+                                  absent
+                                </label>
+                              </div>
+
+
+
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+
+                    
+                  </div>
+                </div>
               </form>
-
             </div>
           </div>
-
         </section>
       </div>
 
       <Footer />
     </div>
+  );
 
-  )
 }
 
+
 export default TeachersessionCall
+
+// {
+//   const { mode, seance_id, seance_classe, heure_debut, heure_fin } = useParams();
+
+//   const { register, handleSubmit, formState, setValue, setError, clearErrors } = useForm();
+
+//   let seanceStart = dayjs(heure_debut).format("HH:mm");
+//   let seanceEnd = dayjs(heure_fin).format("HH:mm");
+
+
+//   const attendanceFormRef = useRef();
+//   const navigate = useNavigate();
+
+//   const [sessionStudents, setSessionStudents] = useState([]);
+
+//   // const [responseMessage, setResponseMessage] = useState('');
+
+//   const [loading, setLoading] = useState(true); // État de chargement
+//   const { axios } = useAxios();
+
+//   const [selectedValue, setSelectedValue] = useState(null); // Stocke la valeur sélectionnée
+
+
+//   const handleSelection = (value) => {
+//     setSelectedValue(value); // Met à jour la valeur sélectionnée
+//   };
+
+//   // const { currentYear } = useAuth();
+
+//   function fetchStudentsAttendanceRecord() {
+//     console.log("fetch sessionStudents");
+//     axios
+//       .get(`/attendance-record/${mode}/${seance_id}`)
+//       .then(function (response) {
+//         const sessionStudents = response.data;
+
+//         setSessionStudents((oldvalue) => sessionStudents);
+//         setLoading(false);
+//         console.log("sessionStudents inn fetchh", sessionStudents);
+//       })
+//       .catch(function (error) {
+//         // handle error
+//         console.log(error);
+//       });
+//   }
+
+//   // function showClassAttendanceRecord(){}
+
+
+//   useEffect(function () {
+//     fetchStudentsAttendanceRecord();
+//   }, []);
+
+//   // if (mode == 'edit') {
+//   //   sessionStudents.forEach((student)=>{
+
+//   //   })
+//   // }
+
+//   if (loading) return <FallbackContent />;
+
+//   console.log("sessionStudents", sessionStudents);
+
+//   function onSubmit(data) {
+//     console.log("dataaaa", data);
+
+//     const attendancesData = sessionStudents.map((student) => {
+//       return {
+//         id: student.id,
+//         isDropped: student.isDropped,
+//         status: data[`student_${student.id}`],
+//       };
+//     });
+//     console.log('attendancesArray', attendancesData);
+
+
+//     let action = mode == 'edit' ? 'update' : 'create';
+
+//     axios
+//       .post(`/attendance-record/${action}/${seance_id}`, { attendances: attendancesData })
+//       .then((response) => {
+//         console.log(response.message);
+//         navigate('/coordinator/call', {
+//           state: response.message
+//         });
+        
+//       })
+//       .catch((error) => {
+//         console.error("Error making attendance:", error);
+//       });
+
+    
+    
+//   }
+
+//   return (
+//     <div className="div-container d-flex flex-column">
+//       <Navbar />
+//       <div className="body-content-container d-flex">
+//         <SidebarCoordinator />
+//         <section className="content-container">
+//           <div className="m-3">
+//             <div className="title-container col-md-12 mt-3 ms-3">
+//               <p className="py-3 fs-3">
+//                 <span className="fw-bold">Session: </span>
+//                 {seanceStart}-{seanceEnd} {seance_classe}
+//               </p>
+//             </div>
+//             <div className="col-md-12">
+//               <form
+//                 className=" d-flex flex-column"
+//                 ref={attendanceFormRef}
+//                 onSubmit={handleSubmit(onSubmit)}
+//               >
+//                 <div className="col-md-12 d-flex justify-content-end ">
+//                   <button type="submit" className="btn btn-success me-5 mb-5">
+//                     END SESSION
+//                   </button>
+//                 </div>
+
+//                 <div className="table shadow">
+//                   <div>
+//                     {sessionStudents.map(function (student, index) {
+//                       let studentId = "student_" + student.id;
+//                       setValue(studentId, student.attendanceStatus);
+//                       console.log('student.attendanceStatus', student.attendanceStatus)
+
+//                       return (
+//                         <div
+//                           className="d-flex align-items-center p-3"
+//                           key={index}
+//                         >
+//                           <div className="fw-bold"> {index + 1}</div>
+//                           <div className="d-flex justify-content-between align-items-center w-100 border-bottom">
+//                             {/* <div className='picture-container'>
+//                               <img src={student.picture} className='profile-picture ' />
+//                             </div> */}
+
+//                             <div colSpan="2">
+//                               {student.name} {student.lastname}
+//                             </div>
+//                             <div className="d-flex justify-content-between w-50 ">
+
+
+//                               <div>
+//                                 <label
+//                                   className="form-check-label text-success fw-bold"
+//                                   htmlFor={"flexRadioDefault2" + student.id}
+//                                 >
+//                                   <input
+//                                     className="form-check-input present me-2 border-success"
+//                                     type="radio"
+//                                     value="1"
+//                                     defaultChecked={student.attendanceStatus == 1 ? true : false}
+
+//                                     id={"flexRadioDefault2" + student.id}
+//                                     {...register(studentId, { required: true })}
+//                                   />
+//                                   present
+//                                 </label>
+//                               </div>
+
+
+
+
+//                               <div>
+//                                 <label
+//                                   className="form-check-label text-warning fw-bold"
+//                                   htmlFor={"flexRadioDefault3" + student.id}
+//                                 >
+//                                   <input
+//                                     className="form-check-input late me-2 border-warning"
+//                                     type="radio"
+//                                     value="0"
+//                                     defaultChecked={student.attendanceStatus == -1 ? true : false}
+//                                     id={"flexRadioDefault3" + student.id}
+//                                     {...register(studentId, { required: true })}
+//                                   />
+//                                   late
+//                                 </label>
+//                               </div>
+
+
+
+
+
+//                               <div>
+//                                 <label
+//                                   className="form-check-label text-danger fw-bold"
+//                                   htmlFor={"flexRadioDefault4" + student.id}
+//                                 >
+//                                   <input
+//                                     className="form-check-input absent me-2 border-danger"
+//                                     type="radio"
+//                                     value="-1"
+//                                     defaultChecked={student.attendanceStatus == 0 ? true : false}
+//                                     id={"flexRadioDefault4" + student.id}
+//                                     {...register(studentId, { required: true })}
+//                                   />
+//                                   absent
+//                                 </label>
+//                               </div>
+
+
+
+//                             </div>
+//                           </div>
+//                         </div>
+//                       );
+//                     })}
+
+//                     {/* <tr>
+//                     <th scope="row">1</th>
+//                     <td colSpan="2">Mark</td>
+//                     <td className="d-flex justify-content-evenly">
+//                       <button type="button" className="btn btn-warning">Danger</button>
+//                       <button type="button" className="btn btn-success">Danger</button>
+//                       <button type="button" className="btn btn-danger">Danger</button>
+//                     </td>
+
+//                   </tr> */}
+//                   </div>
+//                 </div>
+//               </form>
+//             </div>
+//           </div>
+//         </section>
+//       </div>
+
+//       <Footer />
+//     </div>
+//   );
+
+//   // return (
+//   //   <div className='div-container d-flex flex-column'>
+//   //     <Navbar />
+//   //     <div className='body-content-container d-flex'>
+//   //       <SidebarCoordinator />
+//   //       <section className='content-container'>
+//   //         <div class="row">
+//   //           <div class="col-md-12 mt-3 ms-5">
+//   //             <h1 class='py-3'>SESSION : 9h-12h</h1>
+//   //           </div>
+//   //           <div class="col-md-12 d-flex justify-content-end ">
+//   //             <button type="button" class="btn btn-success me-5 mb-5">END SESSION</button>
+//   //           </div>
+//   //           <div class="col-md-12">
+//   //             <table class="table shadow m-3">
+//   //               <thead>
+//   //                 <tr>
+//   //                 </tr>
+//   //               </thead>
+//   //               <tbody>
+//   //                 <tr>
+//   //                   <th scope="row">1</th>
+//   //                   <td colspan="2">Mark</td>
+//   //                   <td class="d-flex justify-content-evenly">
+//   //                     <button type="button" class="btn btn-warning">Danger</button>
+//   //                     <button type="button" class="btn btn-success">Danger</button>
+//   //                     <button type="button" class="btn btn-danger">Danger</button>
+//   //                   </td>
+
+//   //                 </tr>
+//   //                 <tr>
+//   //                   <th scope="row">2</th>
+//   //                   <td colspan="2">Jacob</td>
+//   //                   <td class="d-flex justify-content-evenly">
+//   //                     <button type="button" class="btn btn-warning">Danger</button>
+//   //                     <button type="button" class="btn btn-success">Danger</button>
+//   //                     <button type="button" class="btn btn-danger">Danger</button>
+//   //                   </td>
+
+//   //                 </tr>
+//   //                 <tr>
+//   //                   <th scope="row">3</th>
+//   //                   <td colspan="2">Larry the Bird</td>
+//   //                   <td class="d-flex justify-content-evenly">
+//   //                     <button type="button" class="btn btn-warning">Danger</button>
+//   //                     <button type="button" class="btn btn-success">Danger</button>
+//   //                     <button type="button" class="btn btn-danger">Danger</button>
+//   //                   </td>
+//   //                 </tr>
+//   //               </tbody>
+//   //             </table>
+//   //           </div>
+//   //         </div>
+
+//   //       </section>
+//   //     </div>
+
+//   //     <Footer />
+//   //   </div>
+
+//   // )
+// }
+
+// {
+
+//   const { seance_id } = useParams();
+
+//   const { register, handleSubmit, formState, setValue, setError, clearErrors } = useForm();
+
+
+//   console.log('seance_id', seance_id)
+
+//   const attendanceFormRef = useRef();
+
+
+//   const [sessionStudents, setSessionStudents] = useState([]);
+//   const [loading, setLoading] = useState(true);  // État de chargement
+//   const { axios } = useAxios();
+
+
+//   // const { currentYear } = useAuth();
+
+
+//   function fetchSessionStudents() {
+//     console.log('fetch sessionStudents');
+//     axios.get(`/attendance-record/show/${seance_id}`)
+//       .then(function (response) {
+
+//         const sessionStudents = response.data;
+
+//         setSessionStudents((oldvalue) => sessionStudents);
+//         setLoading(false);
+//         console.log('sessionStudents inn fetchh', sessionStudents);
+
+//       })
+//       .catch(function (error) {
+//         // handle error
+//         console.log(error);
+//       });
+
+
+//   }
+
+
+//   useEffect(function () {
+
+//     fetchSessionStudents()
+
+
+//   }, [])
+
+
+
+//   if (loading) return <FallbackContent />;
+
+//   console.log('sessionStudents', sessionStudents)
+
+//   function onSubmit(data) {
+
+//     console.log('dataaaa', data)
+
+//   }
+
+//   return (
+//     <div className='div-container d-flex flex-column'>
+//       <Navbar />
+//       <div className='body-content-container d-flex'>
+//         <SidebarTeacher />
+//         <section className='content-container'>
+//           <div className="row">
+//             <div className="col-md-12 mt-3 ms-5">
+//               <h1 className='py-3'>SESSION : 9h-12h</h1>
+//             </div>
+//             <div className="col-md-12">
+
+//               <form className=" d-flex flex-column" ref={attendanceFormRef} onSubmit={handleSubmit(onSubmit)} >
+//                 <div className="col-md-12 d-flex justify-content-end ">
+//                   <button type="submit" className="btn btn-success me-5 mb-5">END SESSION</button>
+//                 </div>
+
+//                 <table className="table shadow m-3">
+//                   <thead>
+//                     <tr>
+//                     </tr>
+//                   </thead>
+//                   <tbody>
+//                     {
+//                       sessionStudents.map(function (student, index) {
+
+//                         let studentId = "student_" + student.id;
+
+//                         // console.log('last',student.lastname)
+//                         return <tr key={index}>
+//                           <div className='picture-container'>
+//                             <img src={student.picture} className='profile-picture' />
+//                           </div>
+
+//                           <td>
+//                             <div className='picture-container'>
+//                               <img src={student.picture} className='profile-picture ms-3' />
+//                             </div>
+
+//                           </td>
+//                           <td colSpan="2">{student.name} {student.lastname}</td>
+//                           <td className="d-flex justify-content-evenly">
+//                             <input className="form-check-input" type="radio" defaultValue='1' id={"flexRadioDefault2" + student.id} {...register(studentId, { required: true })} />
+//                             <label className="form-check-label" for={"flexRadioDefault2" + student.id}>
+//                               present
+//                             </label>
+
+//                             <input className="form-check-input" type="radio" defaultValue='-1' id={"flexRadioDefault3" + student.id} {...register(studentId, { required: true })} />
+//                             <label className="form-check-label" for={"flexRadioDefault3" + student.id}>
+//                               absent
+//                             </label>
+
+//                             <input className="form-check-input" type="radio" defaultValue='0' id={"flexRadioDefault4" + student.id} {...register(studentId, { required: true })} />
+//                             <label className="form-check-label" for={"flexRadioDefault4" + student.id}>
+//                               retard
+//                             </label>
+
+
+//                           </td>
+
+//                         </tr>
+
+
+//                       })
+
+//                     }
+
+
+
+
+//                     {/* <tr>
+//                     <th scope="row">1</th>
+//                     <td colSpan="2">Mark</td>
+//                     <td className="d-flex justify-content-evenly">
+//                       <button type="button" className="btn btn-warning">Danger</button>
+//                       <button type="button" className="btn btn-success">Danger</button>
+//                       <button type="button" className="btn btn-danger">Danger</button>
+//                     </td>
+
+//                   </tr> */}
+
+
+
+//                   </tbody>
+//                 </table>
+//               </form>
+
+//             </div>
+//           </div>
+
+//         </section>
+//       </div>
+
+//       <Footer />
+//     </div>
+
+//   )
+// }

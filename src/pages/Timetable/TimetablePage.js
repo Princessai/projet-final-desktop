@@ -15,15 +15,10 @@ function TimetablePage() {
     const { currentYear, isUserAuthenticated, user } = useAuth();
     console.log("🚀 ~ TimetablePage ~ user:", user)
 
-
-
     const [timetables, setTimetables] = useState([]);
 
     const [loading, setLoading] = useState(true);  // État de chargement
     const { axios } = useAxios();
-
-
-
 
 
     const interval = 0;
@@ -50,7 +45,7 @@ function TimetablePage() {
                 })
                 .catch(function (error) {
                     // handle error
-                    console.log(error);
+                    console.error(error);
                 });
 
 

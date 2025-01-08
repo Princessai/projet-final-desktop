@@ -17,6 +17,9 @@ function TimetableClassPage() {
     const { classe_id, classe_label } = useParams();
 
     const [timetables, setTimetables] = useState([]);
+    const [timetablesWithoutSeances, setTimetablesWithoutSeances] = useState([]);
+
+    const [selectedView, setSelectedView] = useState('currentTimetable');
 
     const [loading, setLoading] = useState(true);  // État de chargement
     const { axios } = useAxios();
@@ -36,21 +39,29 @@ function TimetableClassPage() {
 
         if (isUserAuthenticated) {
             console.log('fetch timetable');
-            axios.get(`/timetable/${classe_id}/${annee_id}/${interval}`, {
-                signal: controller.signal
-            })
-                .then(function (response) {
 
-                    const timetables = response.data;
+            Promise.all([
+                axios.get(`/timetable/${classe_id}/${annee_id}/${interval}?withSeances=true`, {
+                    signal: controller.signal
+                }),
+                axios.get(`/timetable/${classe_id}/${annee_id}/${interval}?withSeances=false`)
+            ])
+
+                .then(function ([timetablesRes, timetablesWithoutSeancesRes]) {
+
+                    const timetables = timetablesRes.data;
+                    const timetablesWithoutSeances = timetablesWithoutSeancesRes.data;
 
                     setTimetables((oldvalue) => [...timetables]);
+                    setTimetablesWithoutSeances((oldvalue) => [...timetablesWithoutSeances]);
                     setLoading(false);
                     console.log(timetables);
+                    console.log(timetablesWithoutSeances);
 
                 })
                 .catch(function (error) {
                     // handle error
-                    console.log(error);
+                    console.error(error);
                 });
 
 
@@ -64,11 +75,23 @@ function TimetableClassPage() {
 
 
 
-
-
     if (loading) return <FallbackContent />;
-   
-    
+
+    const passedTimetables = timetablesWithoutSeances.filter((timetable) => {
+        let timetableStart = dayjs(timetable.date_debut);
+        let today = dayjs().format('YYYY-MM-DD');
+        return timetableStart.isBefore(today);
+    })
+    const upCommingTimetables = timetablesWithoutSeances.filter((timetable) => {
+        let timetableStart = dayjs(timetable.date_debut);
+        let today = dayjs().format('YYYY-MM-DD');
+        return timetableStart.isAfter(today);
+    })
+
+    console.log("🚀 ~ passedTimetables ~ passedTimetables:", passedTimetables)
+    console.log("🚀 ~ upCommingTimetables ~ upCommingTimetables:", upCommingTimetables)
+
+    console.log('timetablesWithoutSeances', timetablesWithoutSeances);
     const currentTimetable = timetables[0];
 
 
@@ -99,20 +122,30 @@ function TimetableClassPage() {
                         </div>
                         <div className="col-md-12 mb-5 d-flex justify-content-around">
                             <div className="col-md-8 d-flex justify-content-between">
-                                {/* <Link to={routeRegister.getRoute('coordinatorTimetableClassPastimetable')}>
-                                    <button type="button" className="btn btn-danger">Current Timetable</button>
-                                </Link> */}
+                               
 
-                                <Link>
-                                    <button type="button" className="btn btn-danger m-2 active">Current Timetable</button>
-                                </Link >
-                                <Link to={'/coordinator/timetable/class/pastimetable'}>
-                                    <button type="button" className="btn btn-danger m-2">Past Timetable</button>
-                                </Link >
+                                <div>
+                                    <button type="button" className={`btn btn-danger m-2 ${selectedView == 'currentTimetable' && 'active' }`}
+                                        onClick={() => {
+                                            setSelectedView('currentTimetable')
+                                        }}
+                                    >Current Timetable</button>
+                                </div >
+                                <div >
+                                    <button type="button" className={`btn btn-danger m-2 ${selectedView == 'pastTimetables' && 'active' }`}
+                                        onClick={() => {
+                                            setSelectedView('pastTimetables')
+                                        }}
+                                    >Past Timetable</button>
+                                </div >
 
-                                <Link to={'/coordinator/timetable/class/Upcomingimetable'}>
-                                    <button type="button" className="btn btn-danger m-2">Upcoming Timetable</button>
-                                </Link>
+                                <div >
+                                    <button type="button" className={`btn btn-danger m-2 ${selectedView == 'upCommingTimetables' && 'active' }`}
+                                        onClick={() => {
+                                            setSelectedView('upCommingTimetables')
+                                        }}
+                                    >Upcoming Timetable</button>
+                                </div>
 
                             </div>
                             <div className="col-md-2 d-flex justify-content-center">
@@ -125,218 +158,52 @@ function TimetableClassPage() {
                         </div>
                         <div className="col-md-12">
 
-                            <div className='mx-5'>
+                            {selectedView == 'currentTimetable' && <div className='mx-5'>
                                 <h5 className='text-center fw-bold text-decoration-underline mb-5'> Timetable from {date_debut} to {date_fin}</h5>
-                                    <div>
-                                        <SaveAltOutlined/>
-                                    </div>
-                                <Timetable  seances={currentTimetable.seances}
-                                    breaks={currentTimetable.pauses} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
-
-
-                            </div>
-
-                            <div>
-                                <p className='text-center text-danger fw-bold text-decoration-underline'>NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
-                            </div>
-
-
-
-                            {/* <div className='mx-5'>
-                                <h5 className='text-center fw-bold text-decoration-underline mb-3'>Emploi du temps B3 Développement Web du 13 mai 17 mai 24</h5>
-                                <div className='d-flex'>
-                                    <table className=''>
-                                        <thead>
-                                            <tr className='d-flex flex-column justify-content-between'>
-                                                <th>Hours</th>
-                                                <th>08:00</th>
-                                                <th>09:00</th>
-                                                <th>10:00</th>
-                                                <th>11:00</th>
-                                                <th>12:00</th>
-                                                <th>13:00</th>
-                                                <th>14:00</th>
-                                                <th>15:00</th>
-                                                <th>16:00</th>
-                                                <th>17:00</th>
-                                                <th>18:00</th>
-                                            </tr>
-                                        </thead>
-                                    </table>
-
-                                    <table className="myTimetable">
-                                        <thead className='text-center'>
-                                            <tr>
-                                                <th>
-                                                    Monday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Tuesday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Wednesday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Thursday
-                                                    <span>13/05</span>
-                                                </th>
-                                                <th>
-                                                    Friday
-                                                    <span>13/05</span>
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody >
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan="6" className="break">Break</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan="6" className="lunch">Lunch</td>
-                                            </tr>
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                            <tr>
-                                                <td colSpan="6" className="break">Break</td>
-                                            </tr>
-
-                                            <tr>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">PRESENTIEL</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic">M. Adoh</div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">E-LEARNING</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                                <td>
-                                                    <div className="seanceType fw-bold">WORKSHOP</div>
-                                                    <div className="subject">Javascript</div>
-                                                    <div className="teacherName fst-italic"></div>
-                                                    <div className="room fw-bold">Salle 4</div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
+                                <div>
+                                    <SaveAltOutlined />
                                 </div>
-
-
+                                <Timetable seances={currentTimetable.seances}
+                                    breaks={currentTimetable.pauses} timetableStart={currentTimetable.date_debut} timetableEnd={currentTimetable.date_fin} />
                                 <div>
                                     <p className='text-center text-danger fw-bold text-decoration-underline'>NB: VOTRE RENDU EST A FAIRE DANS LE DELAIS. VOUS PRESENTEREZ LE 14 MAI</p>
                                 </div>
-                            </div> */}
+
+                            </div>}
+
+                            {selectedView == 'pastTimetables' &&
+
+                                passedTimetables.map((timetable) => {
+                                    let start = dayjs(timetable.date_debut).format('dddd, MMMM D, YYYY');
+                                    let end = dayjs(timetable.date_fin).format('dddd, MMMM D, YYYY');
+                                    return <div className='bloc-presence shadow border-0 d-flex justify-content-center align-items-center ms-5  my-3' >
+                                         <Link to={`/coordinator/specific-timetable/${timetable.id}/${classe_label}`}>
+                                             <div className='text-center p-3'>
+                                                <p className='fs-6 m-0'>Timetable from {start} to {end} </p>
+                                            </div>
+                                         </Link>
+                                    </div>
+                                })
+                            }
+                            {selectedView == 'upCommingTimetables' &&
+
+                                upCommingTimetables.map((timetable) => {
+                                    let start = dayjs(timetable.date_debut).format('dddd, MMMM D, YYYY');
+                                    let end = dayjs(timetable.date_fin).format('dddd, MMMM D, YYYY');
+                                    return <div className='bloc-presence shadow border-0 d-flex justify-content-center align-items-center ms-5  my-3' >
+                                         <Link to={`/coordinator/specific-timetable/${timetable.id}/${classe_label}`}>
+                                             <div className='text-center p-3'>
+                                                <p className='fs-6 m-0'>Timetable from {start} to {end} </p>
+                                            </div>
+                                         </Link>
+                                    </div>
+                                })
+                            }
+
+
+
+
+
 
 
 

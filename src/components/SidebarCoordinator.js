@@ -2,8 +2,10 @@ import React from 'react';
 import './Sidebar.css';
 import Button from './Button.js';
 import { routeRegister } from '../../route.js';
+import { useNavigate } from 'react-router-dom';
 
 function SidebarCoordinator() {
+    const navigate = useNavigate();
 
     function back(){
         navigate(-1);

@@ -23,7 +23,6 @@ function CoordinatorsessionCall() {
 
   const [sessionStudents, setSessionStudents] = useState([]);
 
-  // const [responseMessage, setResponseMessage] = useState('');
 
   const [loading, setLoading] = useState(true); // État de chargement
   const { axios } = useAxios();
@@ -35,7 +34,6 @@ function CoordinatorsessionCall() {
     setSelectedValue(value); // Met à jour la valeur sélectionnée
   };
 
-  // const { currentYear } = useAuth();
 
   function fetchStudentsAttendanceRecord() {
     console.log("fetch sessionStudents");
@@ -54,18 +52,12 @@ function CoordinatorsessionCall() {
       });
   }
 
-  // function showClassAttendanceRecord(){}
 
 
   useEffect(function () {
     fetchStudentsAttendanceRecord();
   }, []);
 
-  // if (mode == 'edit') {
-  //   sessionStudents.forEach((student)=>{
-
-  //   })
-  // }
 
   if (loading) return <FallbackContent />;
 
@@ -142,9 +134,9 @@ function CoordinatorsessionCall() {
                         >
                           <div className="fw-bold"> {index + 1}</div>
                           <div className="d-flex justify-content-between align-items-center w-100 border-bottom">
-                            {/* <div className='picture-container'>
+                            <div className='picture-container'>
                               <img src={student.picture} className='profile-picture ' />
-                            </div> */}
+                            </div>
 
                             <div colSpan="2">
                               {student.name} {student.lastname}
